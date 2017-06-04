@@ -9,8 +9,8 @@ const toRow = (edgeClass, innerClass) => x => tr({className: 'boardRow'},
     .concat([cell(edgeClass)()])
   );
 
-const edgeRow = toRow('', 'edgeCell');
-const row = toRow('edgeCell', '');
+const edgeRow = toRow('corner', 'edgeCell');
+const row = toRow('edgeCell', 'gridCell');
 
 export default function matrix(x, y) { 
   return table({className: 'board'}, 

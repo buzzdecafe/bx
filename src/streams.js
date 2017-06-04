@@ -14,10 +14,16 @@ const id = (function() {
 // Stream Transformers and Filters
 //--------------------------------
 
-const toCoords = e => ({
+const toEdgeCoords = e => ({
   x: e.target.cellIndex,
   y: e.target.parentElement.rowIndex,
   id: id(),
+  src: e.target
+});
+
+const toGridCoords = e => ({
+  x: e.target.cellIndex,
+  y: e.target.parentElement.rowIndex,
   src: e.target
 });
 
@@ -40,9 +46,7 @@ const isEdge = n => pt => !isGrid(n)(pt) &&! isCorner(n)(pt);
 
 export const clicks = flyd.stream();
 
-const coords = flyd.map(toCoords, filter(isTd, clicks));
+export const edge = filter(isEdge(10), flyd.map(toEdgeCoords, filter(isTd, clicks)));
 
-export const edge = filter(isEdge(10), coords);
-
-export const grid = filter(isGrid(10), coords); 
+export const grid = filter(isGrid(10), flyd.map(toGridCoords, filter(isTd, clicks))); 
 

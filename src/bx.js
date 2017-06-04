@@ -25,14 +25,35 @@ const show = board => ray => Ray.case({
     Exit:       (from, to) => getElem(board, {className: ' selected', textContent: from.id}, to)
   }, ray);
 
-const guess = x => x;
+
+
+const wm = new WeakMap();
+
+const inc = elem => {
+  const cn = elem.className;
+  const state = (Number(wm.get(elem)) + 1) % 3;
+  if (isNaN(state)) {
+    wm.set(elem, 1);
+    elem.className += ' guess1';
+  } else {
+    elem.className = cn.replace(/(guess)(\d)/, 
+        (_, base, n) =>  base + state);
+    wm.set(elem, state);
+  }
+  return elem;
+};
+
+const guess = pt => {
+  const _ = inc(pt.src);
+  return pt;
+};
 
 const onReady = () => {
   const board = document.getElementById('board');
   board.appendChild(matrix(10, 10));
   board.addEventListener('click', clicks);
 
-  const result = o(show(board), queryOver(points));
+  const result = o(show(board), queryOver(points(10, 5)));
 
   flyd.map(result, edge);
   flyd.map(guess, grid);

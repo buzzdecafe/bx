@@ -1,0 +1,41 @@
+.board {
+  background-color: rgba(32, 32, 32, 0.9);
+  border-collapse: collapse;
+}
+.cell {
+  width: 3.2em;
+  height: 3.2em;
+  outline: 1px solid #555;
+  text-align: center;
+}
+.corner {
+  background-color: #fff;
+  outline: none;
+}
+.edgeCell {
+  font-family: Symbols1;
+  outline: 1px solid #fff;
+  background-color: #888;
+}
+.edgeCell.selected {
+  outline: 1px solid black;
+  background-color: orange;
+}
+.edgeCell.hit {
+  outline: 1px solid black;
+  background-color: red;
+}
+.edgeCell.reflection {
+  outline: 1px solid black;
+  background-color: yellow;
+}
+.gridCell.guess1 {
+  border: 1px solid rgba(0, 224, 164, 0.2);
+  background-color: rgba(0, 224, 164, 0.2);
+  border-radius: 50%;
+}
+.gridCell.guess2 {
+  border: 1px solid rgba(0, 224, 0, 1);
+  background-color: rgba(0, 224, 0, 1);
+  border-radius: 50%;
+}

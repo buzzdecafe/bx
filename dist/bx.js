@@ -987,8 +987,8 @@ const cell = cls => () => rdom_3({ className: 'cell ' + cls }, []);
 
 const toRow = (edgeClass, innerClass) => x => rdom_2({ className: 'boardRow' }, [cell(edgeClass)()].concat(range(0, x - 2).map(cell(innerClass))).concat([cell(edgeClass)()]));
 
-const edgeRow = toRow('', 'edgeCell');
-const row = toRow('edgeCell', '');
+const edgeRow = toRow('corner', 'edgeCell');
+const row = toRow('edgeCell', 'gridCell');
 
 function matrix(x, y) {
   return rdom_1({ className: 'board' }, [edgeRow(x)].concat(range(0, y - 2).map(_ => row(x))).concat([edgeRow(x)]));
@@ -1958,10 +1958,16 @@ const id$1 = function () {
 // Stream Transformers and Filters
 //--------------------------------
 
-const toCoords = e => ({
+const toEdgeCoords = e => ({
   x: e.target.cellIndex,
   y: e.target.parentElement.rowIndex,
   id: id$1(),
+  src: e.target
+});
+
+const toGridCoords = e => ({
+  x: e.target.cellIndex,
+  y: e.target.parentElement.rowIndex,
   src: e.target
 });
 
@@ -1979,13 +1985,69 @@ const isEdge = n => pt => !isGrid(n)(pt) && !isCorner(n)(pt);
 
 const clicks = index$1.stream();
 
-const coords = index$1.map(toCoords, index$2(isTd, clicks));
+const edge$1 = index$2(isEdge(10), index$1.map(toEdgeCoords, index$2(isTd, clicks)));
 
-const edge$1 = index$2(isEdge(10), coords);
+const grid = index$2(isGrid(10), index$1.map(toGridCoords, index$2(isTd, clicks)));
 
-const grid = index$2(isGrid(10), coords);
+/**
+ * Calls an input function `n` times, returning an array containing the results
+ * of those function calls.
+ *
+ * `fn` is passed one argument: The current value of `n`, which begins at `0`
+ * and is gradually incremented to `n - 1`.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.2.3
+ * @category List
+ * @sig (Number -> a) -> Number -> [a]
+ * @param {Function} fn The function to invoke. Passed one argument, the current value of `n`.
+ * @param {Number} n A value between `0` and `n - 1`. Increments after each function call.
+ * @return {Array} An array containing the return values of all calls to `fn`.
+ * @see R.repeat
+ * @example
+ *
+ *      R.times(R.identity, 5); //=> [0, 1, 2, 3, 4]
+ * @symb R.times(f, 0) = []
+ * @symb R.times(f, 1) = [f(0)]
+ * @symb R.times(f, 2) = [f(0), f(1)]
+ */
+var times = _curry2$3(function times(fn, n) {
+  var len = Number(n);
+  var idx = 0;
+  var list;
 
-const points = [{ x: 5, y: 8 }];
+  if (len < 0 || isNaN(len)) {
+    throw new RangeError('n must be a non-negative number');
+  }
+  list = new Array(len);
+  while (idx < len) {
+    list[idx] = fn(idx);
+    idx += 1;
+  }
+  return list;
+});
+
+var chosen = {};
+
+const k = (x, y) => x + ',' + y;
+
+const exists = (x, y) => chosen[k(x, y)];
+
+const gen = g => parseInt(Math.random() * g, 10) + 1;
+
+const randPt = size => _ => {
+  const gridSize = size - 2;
+  const x = gen(gridSize);
+  const y = gen(gridSize);
+  if (exists(x, y)) {
+    return randPt(size)();
+  }
+  chosen[k(x, y)] = true;
+  return { x: x, y: y };
+};
+
+const points = (size, marbles) => times(randPt(size), marbles);
 
 const getElem = (board, attrs, pt) => {
   const tr = board.querySelector('tr:nth-child(' + (pt.y + 1) + ')');
@@ -2005,14 +2067,32 @@ const show = board => ray => Ray.case({
   Exit: (from, to) => getElem(board, { className: ' selected', textContent: from.id }, to)
 }, ray);
 
-const guess = x => x;
+const wm = new WeakMap();
+
+const inc = elem => {
+  const cn = elem.className;
+  const state = (Number(wm.get(elem)) + 1) % 3;
+  if (isNaN(state)) {
+    wm.set(elem, 1);
+    elem.className += ' guess1';
+  } else {
+    elem.className = cn.replace(/(guess)(\d)/, (_, base, n) => base + state);
+    wm.set(elem, state);
+  }
+  return elem;
+};
+
+const guess = pt => {
+  const _ = inc(pt.src);
+  return pt;
+};
 
 const onReady = () => {
   const board = document.getElementById('board');
   board.appendChild(matrix(10, 10));
   board.addEventListener('click', clicks);
 
-  const result = o(show(board), queryOver(points));
+  const result = o(show(board), queryOver(points(10, 5)));
 
   index$1.map(result, edge$1);
   index$1.map(guess, grid);
