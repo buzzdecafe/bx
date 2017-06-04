@@ -2,30 +2,30 @@ import matrix from './matrix';
 import {Ray, Point, id} from './types';
 import merge from 'ramda/src/merge';
 
-const of = p => Point.PointOf(merge(p, {id: ''}));
+const of = Point.PointOf;
 
 const right = (p) => ({
-  left:   {x: p.x + 1, y: p.y - 1},
-  center: {x: p.x + 1, y: p.y    },
-  right:  {x: p.x + 1, y: p.y + 1}
+  left:   merge(p, {x: p.x + 1, y: p.y - 1}),
+  center: merge(p, {x: p.x + 1, y: p.y    }),
+  right:  merge(p, {x: p.x + 1, y: p.y + 1})
 });
 
 const left = (p) => ({
-  left:   {x: p.x - 1, y: p.y - 1},
-  center: {x: p.x - 1, y: p.y    },
-  right:  {x: p.x - 1, y: p.y + 1}
+  left:   merge(p, {x: p.x - 1, y: p.y - 1}),
+  center: merge(p, {x: p.x - 1, y: p.y    }),
+  right:  merge(p, {x: p.x - 1, y: p.y + 1})
 });
 
 const down = (p) => ({
-  left:   {x: p.x - 1, y: p.y + 1},
-  center: {x: p.x,     y: p.y + 1},
-  right:  {x: p.x + 1, y: p.y + 1}
+  left:   merge(p, {x: p.x - 1, y: p.y + 1}),
+  center: merge(p, {x: p.x,     y: p.y + 1}),
+  right:  merge(p, {x: p.x + 1, y: p.y + 1})
 });
 
 const up = (p) => ({
-  left:   {x: p.x - 1, y: p.y - 1},
-  center: {x: p.x,     y: p.y - 1},
-  right:  {x: p.x + 1, y: p.y - 1}
+  left:   merge(p, {x: p.x - 1, y: p.y - 1}),
+  center: merge(p, {x: p.x,     y: p.y - 1}),
+  right:  merge(p, {x: p.x + 1, y: p.y - 1})
 });
 
 right.R = up;
@@ -71,7 +71,7 @@ export const queryOver = points => entryPt => {
     const ns = step(currentPt);
     
     if (exit(step, ns.center)) {
-      return Ray.Exit(of(ns.center));
+      return Ray.Exit(of(entryPt), of(ns.center));
     }
 
     if (contains(ns.center)) {

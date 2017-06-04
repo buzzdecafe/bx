@@ -1,4 +1,3 @@
-//import o from 'ramda/src/o';
 import flyd from 'flyd';
 import filter from 'flyd/module/filter';
 import o from 'ramda/src/o';
@@ -18,7 +17,8 @@ const id = (function() {
 const toCoords = e => ({
   x: e.target.cellIndex,
   y: e.target.parentElement.rowIndex,
-  id: id()
+  id: id(),
+  src: e.target
 });
 
 const isTd = e => e.target.nodeName === 'TD';
@@ -34,19 +34,13 @@ const isCorner = n => pt =>
 
 const isEdge = n => pt => !isGrid(n)(pt) &&! isCorner(n)(pt);
 
-const decorate = e => {
-  e.target.className = 'cell edgeCell selected';
-  return e;
-};
-
-
 //--------------------------------
 // Streams
 //--------------------------------
 
-export const clicks = flyd.map(decorate, flyd.stream());
+export const clicks = flyd.stream();
 
-const coords = flyd.map(o(toCoords, decorate), filter(isTd, clicks));
+const coords = flyd.map(toCoords, filter(isTd, clicks));
 
 export const edge = filter(isEdge(10), coords);
 

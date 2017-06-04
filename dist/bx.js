@@ -1718,14 +1718,15 @@ const Point = unionType$1({
   Point: {
     x: isCoord,
     y: isCoord,
-    id: String
+    id: String,
+    src: Object
   }
 });
 
 const Ray = unionType$1({
   Hit: [Point],
   Reflection: [Point],
-  Exit: [Point]
+  Exit: [Point, Point]
 });
 
 var _has = function _has(prop, obj) {
@@ -1785,30 +1786,30 @@ var merge = _curry2$3(function merge(l, r) {
   return _assign({}, l, r);
 });
 
-const of = p => Point.PointOf(merge(p, { id: '' }));
+const of = Point.PointOf;
 
 const right = p => ({
-  left: { x: p.x + 1, y: p.y - 1 },
-  center: { x: p.x + 1, y: p.y },
-  right: { x: p.x + 1, y: p.y + 1 }
+  left: merge(p, { x: p.x + 1, y: p.y - 1 }),
+  center: merge(p, { x: p.x + 1, y: p.y }),
+  right: merge(p, { x: p.x + 1, y: p.y + 1 })
 });
 
 const left = p => ({
-  left: { x: p.x - 1, y: p.y - 1 },
-  center: { x: p.x - 1, y: p.y },
-  right: { x: p.x - 1, y: p.y + 1 }
+  left: merge(p, { x: p.x - 1, y: p.y - 1 }),
+  center: merge(p, { x: p.x - 1, y: p.y }),
+  right: merge(p, { x: p.x - 1, y: p.y + 1 })
 });
 
 const down = p => ({
-  left: { x: p.x - 1, y: p.y + 1 },
-  center: { x: p.x, y: p.y + 1 },
-  right: { x: p.x + 1, y: p.y + 1 }
+  left: merge(p, { x: p.x - 1, y: p.y + 1 }),
+  center: merge(p, { x: p.x, y: p.y + 1 }),
+  right: merge(p, { x: p.x + 1, y: p.y + 1 })
 });
 
 const up = p => ({
-  left: { x: p.x - 1, y: p.y - 1 },
-  center: { x: p.x, y: p.y - 1 },
-  right: { x: p.x + 1, y: p.y - 1 }
+  left: merge(p, { x: p.x - 1, y: p.y - 1 }),
+  center: merge(p, { x: p.x, y: p.y - 1 }),
+  right: merge(p, { x: p.x + 1, y: p.y - 1 })
 });
 
 right.R = up;
@@ -1855,7 +1856,7 @@ const queryOver = points => entryPt => {
     const ns = step(currentPt);
 
     if (exit(step, ns.center)) {
-      return Ray.Exit(of(ns.center));
+      return Ray.Exit(of(entryPt), of(ns.center));
     }
 
     if (contains(ns.center)) {
@@ -1945,7 +1946,6 @@ var o = _curry3$3(function o(f, g, x) {
   return f(g(x));
 });
 
-//import o from 'ramda/src/o';
 const id$1 = function () {
   var counter = 64;
   return () => {
@@ -1961,7 +1961,8 @@ const id$1 = function () {
 const toCoords = e => ({
   x: e.target.cellIndex,
   y: e.target.parentElement.rowIndex,
-  id: id$1()
+  id: id$1(),
+  src: e.target
 });
 
 const isTd = e => e.target.nodeName === 'TD';
@@ -1972,18 +1973,13 @@ const isCorner = n => pt => pt.x === 0 && pt.y === 0 || pt.x === 0 && pt.y === n
 
 const isEdge = n => pt => !isGrid(n)(pt) && !isCorner(n)(pt);
 
-const decorate = e => {
-  e.target.className = 'cell edgeCell selected';
-  return e;
-};
-
 //--------------------------------
 // Streams
 //--------------------------------
 
-const clicks = index$1.map(decorate, index$1.stream());
+const clicks = index$1.stream();
 
-const coords = index$1.map(o(toCoords, decorate), index$2(isTd, clicks));
+const coords = index$1.map(toCoords, index$2(isTd, clicks));
 
 const edge$1 = index$2(isEdge(10), coords);
 
@@ -1995,19 +1991,19 @@ const getElem = (board, attrs, pt) => {
   const tr = board.querySelector('tr:nth-child(' + (pt.y + 1) + ')');
   const td = tr.querySelector('td:nth-child(' + (pt.x + 1) + ')');
   td.className += attrs.className;
-  if (attrs.textContent) td.textContent = attrs.textContent;
+  pt.src.className += attrs.className;
+  if (attrs.textContent) {
+    td.textContent = attrs.textContent;
+    pt.src.textContent = attrs.textContent;
+  }
   return td;
 };
 
-const toDom = board => (ray, point) => {
-  return Ray.case({
-    Hit: () => getElem(board, { className: ' hit' }, point),
-    Reflection: () => getElem(board, { className: ' reflect' }, point),
-    Exit: p => getElem(board, { className: ' selected', textContent: p.id }, point)
-  }, ray);
-};
-
-const show = (board, dom) => ray => dom(ray, { x: ray[0].x, y: ray[0].y });
+const show = board => ray => Ray.case({
+  Hit: from => getElem(board, { className: ' hit' }, from),
+  Reflection: from => getElem(board, { className: ' reflect' }, from),
+  Exit: (from, to) => getElem(board, { className: ' selected', textContent: from.id }, to)
+}, ray);
 
 const guess = x => x;
 
@@ -2016,7 +2012,7 @@ const onReady = () => {
   board.appendChild(matrix(10, 10));
   board.addEventListener('click', clicks);
 
-  const result = o(show(board, toDom(board)), queryOver(points));
+  const result = o(show(board), queryOver(points));
 
   index$1.map(result, edge$1);
   index$1.map(guess, grid);

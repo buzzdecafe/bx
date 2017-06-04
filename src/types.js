@@ -6,14 +6,15 @@ export const Point = Type({
   Point: {
     x: isCoord, 
     y: isCoord, 
-    id: String
+    id: String,
+    src: Object
   }
 });
 
 export const Ray = Type({
   Hit: [Point],
   Reflection: [Point],
-  Exit: [Point]
+  Exit: [Point, Point]
 });
 
 export const id = (function() {
