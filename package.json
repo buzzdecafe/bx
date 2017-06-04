@@ -4,7 +4,8 @@
   "description": "Learning project",
   "main": "index.js",
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "watch": "rollup -c -w"
   },
   "repository": {
     "type": "git",
@@ -19,7 +20,8 @@
   "dependencies": {
     "flyd": "^0.2.4",
     "ramda": "^0.24.0",
-    "rdom": "^0.6.0"
+    "rdom": "^0.6.0",
+    "union-type": "^0.4.0"
   },
   "devDependencies": {
     "babel-plugin-external-helpers": "^6.22.0",
@@ -28,6 +30,7 @@
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-commonjs": "^8.0.2",
     "rollup-plugin-node-resolve": "^3.0.0",
-    "rollup-plugin-uglify": "^1.0.2"
+    "rollup-plugin-uglify": "^1.0.2",
+    "rollup-watch": "^3.2.2"
   }
 }

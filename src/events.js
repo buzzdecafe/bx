@@ -1,20 +1,30 @@
-import o from 'ramda/src/o';
+//import o from 'ramda/src/o';
 import flyd from 'flyd';
 import filter from 'flyd/module/filter';
-import matrix from './matrix';
+import o from 'ramda/src/o';
 
-const clicks = flyd.stream();
+const id = (function() {
+  var counter = 64;
+  return () => {
+    counter += 1;
+    return String.fromCharCode(counter);
+  };
+}());
+
+//--------------------------------
+// Stream Transformers and Filters
+//--------------------------------
 
 const toCoords = e => ({
   x: e.target.cellIndex,
-  y: e.target.parentElement.rowIndex
+  y: e.target.parentElement.rowIndex,
+  id: id()
 });
 
-const isGrid = n => pt => 
-  pt.x > 0    &&
-  pt.y > 0    && 
-  pt.x < n-1  && 
-  pt.y < n-1;
+const isTd = e => e.target.nodeName === 'TD';
+
+const isGrid = n => pt =>  pt.x > 0   && pt.y > 0 && 
+                           pt.x < n-1 && pt.y < n-1;
 
 const isCorner = n => pt => 
   (pt.x === 0   && pt.y === 0)   ||
@@ -24,22 +34,21 @@ const isCorner = n => pt =>
 
 const isEdge = n => pt => !isGrid(n)(pt) &&! isCorner(n)(pt);
 
-const log = msg => point => { 
-  console.log(msg); 
-  console.log(point); 
-  return point; 
+const decorate = e => {
+  e.target.className = 'cell edgeCell selected';
+  return e;
 };
 
-const coords = flyd.map(toCoords, clicks);
 
-const edge = flyd.map(log('edge'), filter(isEdge(10), coords));
+//--------------------------------
+// Streams
+//--------------------------------
 
-const grid = flyd.map(log('grid'), filter(isGrid(10), coords)); 
+export const clicks = flyd.map(decorate, flyd.stream());
 
+const coords = flyd.map(o(toCoords, decorate), filter(isTd, clicks));
 
+export const edge = filter(isEdge(10), coords);
 
-export default function onReady() {
-  const board = document.getElementById('board');
-  board.appendChild(matrix(10, 10));
-  board.addEventListener('click', clicks);
-}
+export const grid = filter(isGrid(10), coords); 
+
