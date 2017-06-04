@@ -1985,7 +1985,7 @@ const edge$1 = index$2(isEdge(10), coords);
 
 const grid = index$2(isGrid(10), coords);
 
-const points = [{ x: 2, y: 2 }, { x: 3, y: 3 }, { x: 5, y: 3 }, { x: 6, y: 8 }];
+const points = [{ x: 5, y: 8 }];
 
 const getElem = (board, attrs, pt) => {
   const tr = board.querySelector('tr:nth-child(' + (pt.y + 1) + ')');
@@ -2001,7 +2001,7 @@ const getElem = (board, attrs, pt) => {
 
 const show = board => ray => Ray.case({
   Hit: from => getElem(board, { className: ' hit' }, from),
-  Reflection: from => getElem(board, { className: ' reflect' }, from),
+  Reflection: from => getElem(board, { className: ' reflection' }, from),
   Exit: (from, to) => getElem(board, { className: ' selected', textContent: from.id }, to)
 }, ray);
 

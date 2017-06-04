@@ -21,7 +21,7 @@ const getElem = (board, attrs, pt) => {
 
 const show = board => ray => Ray.case({
     Hit:        (from)  => getElem(board, {className: ' hit'}, from),
-    Reflection: (from)  => getElem(board, {className: ' reflect'}, from),
+    Reflection: (from)  => getElem(board, {className: ' reflection'}, from),
     Exit:       (from, to) => getElem(board, {className: ' selected', textContent: from.id}, to)
   }, ray);
 
