@@ -1,10 +1,16 @@
 import flyd from 'flyd';
 import {queryOver} from './init';
 import matrix from './matrix';
-import {clicks, edge, grid} from './streams';
+import {clicks, edge, grid, check} from './streams';
 import {points} from './points';
 import o from 'ramda/src/o';
-import {Ray} from './types';
+import all from 'ramda/src/all';
+import equals from 'ramda/src/equals';
+import find from 'ramda/src/find';
+import reject from 'ramda/src/reject';
+import tap from 'ramda/src/tap';
+import whereEq from 'ramda/src/whereEq';
+import {Ray, Solution} from './types';
 
 
 const getElem = (board, attrs, pt) => {
@@ -43,20 +49,37 @@ const inc = elem => {
   return elem;
 };
 
-const guess = pt => {
-  const _ = inc(pt.src);
-  return pt;
+const guess = gs => pt => {
+  const elem = inc(pt.src);
+  return elem.className.includes('guess2') ?
+    gs.concat(pt) :
+    reject(equals(elem), gs);
 };
+
+const validate = (pts, gs) => gs.length === pts.length && 
+                              all(g => find(whereEq(g), pts), gs);
+
+
+const trySolve = points => (e, gs) =>
+  validate(points, gs()) ? Solution.Valid() : Solution.Invalid('Incorrect solution');
 
 const onReady = () => {
   const board = document.getElementById('board');
   board.appendChild(matrix(10, 10));
   board.addEventListener('click', clicks);
 
-  const result = o(show(board), queryOver(points(10, 5)));
+  const m = 5;
+  const pts = points(10, m);
+  const result = o(show(board), queryOver(pts));
 
-  flyd.map(result, edge);
-  flyd.map(guess, grid);
+  const _ = flyd.map(result, edge);
+  const guesses = flyd.map(guess([]), grid);
+
+
+  const attempt = document.getElementById('attempt');
+  flyd.map(tap(gs => attempt.disabled = gs.length !== m), guesses);
+  attempt.addEventListener('click', check);
+  flyd.combine(trySolve(pts), [check, guesses]);
 };
 
 document.addEventListener('DOMContentLoaded', onReady);

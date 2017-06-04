@@ -17,6 +17,11 @@ export const Ray = Type({
   Exit: [Point, Point]
 });
 
+export const Solution = Type({
+  Valid: [],
+  Invalid: [String]
+});
+
 export const id = (function() {
   var counter = 64;
   return () => {

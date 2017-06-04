@@ -50,3 +50,6 @@ export const edge = filter(isEdge(10), flyd.map(toEdgeCoords, filter(isTd, click
 
 export const grid = filter(isGrid(10), flyd.map(toGridCoords, filter(isTd, clicks))); 
 
+export const check = flyd.stream();
+
+
