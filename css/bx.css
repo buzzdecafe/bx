@@ -1,3 +1,6 @@
+#main {
+  max-width: 34em;
+}
 .board {
   background-color: rgba(32, 32, 32, 0.9);
   border-collapse: collapse;
@@ -38,4 +41,8 @@
   border: 1px solid rgba(0, 224, 0, 1);
   background-color: rgba(0, 224, 0, 1);
   border-radius: 50%;
+}
+.button-box {
+  text-align: center;
+  margin-top: 1.5em;
 }

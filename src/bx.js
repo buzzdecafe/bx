@@ -1,5 +1,5 @@
 import flyd from 'flyd';
-import {queryOver} from './init';
+import {queryOver} from './query';
 import matrix from './matrix';
 import {clicks, edge, grid, check} from './streams';
 import {points} from './points';
@@ -62,6 +62,15 @@ const guess = gs => pt => {
 const validate = (pts, gs) => gs.length === pts.length && 
                               all(pt => find(whereEq(pt), gs), pts);
 
+const tally = (function() {
+  var count = 0;
+  return () => {
+    count += 1;
+    return count;
+  };
+}());
+
+const showTally = t => n => t.textContent = n;
 
 const trySolve = (points, gstream) => e =>
   gstream().length !== points.length ? Solution.Impossible :
@@ -71,7 +80,7 @@ const trySolve = (points, gstream) => e =>
 const notify = s => Solution.case({
   Valid:      () => alert('You found the solution!'),
   Invalid:   (m) => alert(m),
-  Impossible: () => console.log('nothing to see here')
+  Impossible: () => {}
 }, s);
 
 const onReady = () => {
@@ -81,16 +90,20 @@ const onReady = () => {
 
   const m = 5;
   const pts = points(10, m);
+
   const result = o(show(board), queryOver(pts));
+  flyd.on(result, edge);
 
-  const _ = flyd.map(result, edge);
-  const guesses = flyd.map(guess([]), grid);
-
+  const queries = document.getElementById('queries');
+  flyd.on(o(showTally(queries), tally), edge);
 
   const attempt = document.getElementById('attempt');
-  flyd.map(tap(gs => attempt.disabled = gs.length !== m), guesses);
   attempt.addEventListener('click', check);
-  flyd.map(notify, flyd.map(trySolve(pts, guesses), check));
+
+  const guesses = flyd.map(guess([]), grid);
+  flyd.on(tap(gs => attempt.disabled = gs.length !== m), guesses);
+  const solve = flyd.map(trySolve(pts, guesses), check);
+  flyd.on(notify, solve);
 };
 
 document.addEventListener('DOMContentLoaded', onReady);
