@@ -16,6 +16,7 @@ const randPt = size => _ => {
     return randPt(size)();
   }
   chosen[k(x, y)] = true;
+  console.log(k(x, y));
   return {x: x, y: y};
 }
 

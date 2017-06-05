@@ -18,8 +18,9 @@ export const Ray = Type({
 });
 
 export const Solution = Type({
-  Valid: [],
-  Invalid: [String]
+  Valid     : [],
+  Impossible: [],
+  Invalid   : [String]
 });
 
 export const id = (function() {

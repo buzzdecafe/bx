@@ -51,17 +51,28 @@ const inc = elem => {
 
 const guess = gs => pt => {
   const elem = inc(pt.src);
-  return elem.className.includes('guess2') ?
-    gs.concat(pt) :
-    reject(equals(elem), gs);
+  if (elem.className.includes('guess2')) {
+    gs.push(pt);
+  } else {
+    gs = reject(equals(pt), gs);
+  }
+  return gs;
 };
 
 const validate = (pts, gs) => gs.length === pts.length && 
-                              all(g => find(whereEq(g), pts), gs);
+                              all(pt => find(whereEq(pt), gs), pts);
 
 
-const trySolve = points => (e, gs) =>
-  validate(points, gs()) ? Solution.Valid() : Solution.Invalid('Incorrect solution');
+const trySolve = (points, gstream) => e =>
+  gstream().length !== points.length ? Solution.Impossible :
+    validate(points, gstream())      ? Solution.Valid      : 
+                                       Solution.Invalid('Incorrect solution');
+
+const notify = s => Solution.case({
+  Valid:      () => alert('You found the solution!'),
+  Invalid:   (m) => alert(m),
+  Impossible: () => console.log('nothing to see here')
+}, s);
 
 const onReady = () => {
   const board = document.getElementById('board');
@@ -79,7 +90,7 @@ const onReady = () => {
   const attempt = document.getElementById('attempt');
   flyd.map(tap(gs => attempt.disabled = gs.length !== m), guesses);
   attempt.addEventListener('click', check);
-  flyd.combine(trySolve(pts), [check, guesses]);
+  flyd.map(notify, flyd.map(trySolve(pts, guesses), check));
 };
 
 document.addEventListener('DOMContentLoaded', onReady);

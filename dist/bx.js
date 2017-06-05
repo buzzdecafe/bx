@@ -1731,6 +1731,7 @@ const Ray = unionType$1({
 
 const Solution = unionType$1({
   Valid: [],
+  Impossible: [],
   Invalid: [String]
 });
 
@@ -2051,6 +2052,7 @@ const randPt = size => _ => {
     return randPt(size)();
   }
   chosen[k(x, y)] = true;
+  console.log(k(x, y));
   return { x: x, y: y };
 };
 
@@ -3100,12 +3102,23 @@ const inc = elem => {
 
 const guess = gs => pt => {
   const elem = inc(pt.src);
-  return elem.className.includes('guess2') ? gs.concat(pt) : reject(equals(elem), gs);
+  if (elem.className.includes('guess2')) {
+    gs.push(pt);
+  } else {
+    gs = reject(equals(pt), gs);
+  }
+  return gs;
 };
 
-const validate = (pts, gs) => gs.length === pts.length && all(g => find(whereEq(g), pts), gs);
+const validate = (pts, gs) => gs.length === pts.length && all(pt => find(whereEq(pt), gs), pts);
 
-const trySolve = points$$1 => (e, gs) => validate(points$$1, gs()) ? Solution.Valid() : Solution.Invalid('Incorrect solution');
+const trySolve = (points$$1, gstream) => e => gstream().length !== points$$1.length ? Solution.Impossible : validate(points$$1, gstream()) ? Solution.Valid : Solution.Invalid('Incorrect solution');
+
+const notify = s => Solution.case({
+  Valid: () => alert('You found the solution!'),
+  Invalid: m => alert(m),
+  Impossible: () => console.log('nothing to see here')
+}, s);
 
 const onReady = () => {
   const board = document.getElementById('board');
@@ -3122,7 +3135,7 @@ const onReady = () => {
   const attempt = document.getElementById('attempt');
   index$1.map(tap(gs => attempt.disabled = gs.length !== m), guesses);
   attempt.addEventListener('click', check);
-  index$1.combine(trySolve(pts), [check, guesses]);
+  index$1.map(notify, index$1.map(trySolve(pts, guesses), check));
 };
 
 document.addEventListener('DOMContentLoaded', onReady);
