@@ -7,7 +7,7 @@ export const Point = Type({
     x: isCoord, 
     y: isCoord, 
     id: String,
-    src: Object
+    src: String
   }
 });
 
@@ -18,8 +18,8 @@ export const Ray = Type({
 });
 
 export const Solution = Type({
-  Valid     : [],
   Impossible: [],
+  Valid     : [String],
   Invalid   : [String]
 });
 

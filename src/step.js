@@ -40,10 +40,10 @@ const error = s => () => { throw s; }
 
 // firstStep :: Point -> Dir 
 export const firstStep = pt => pt.x === 0 ? right   :
-                        pt.x === 9 ? left    :
-                        pt.y === 0 ? down    :
-                        pt.y === 9 ? up      :
-                        error("Invalid step");
+                               pt.x === 9 ? left    :
+                               pt.y === 0 ? down    :
+                               pt.y === 9 ? up      :
+                               error("Invalid step");
 
 // exit :: (Dir, Point) -> Bool
 export const exit = (dir, pt) => {

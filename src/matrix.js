@@ -1,21 +1,24 @@
-import range from 'ramda/src/range';
-import {table, tr, td} from 'rdom';
+import chain from 'ramda/src/chain';
+import times from 'ramda/src/times';
+import {div} from 'rdom';
 
-const cell = (cls) => () => td({className: 'cell ' + cls}, []);
+const pid = (x, y) => 'pt-' + x + '-' + y;
+const inc = n => n + 1;
 
-const toRow = (edgeClass, innerClass) => x => tr({className: 'boardRow'}, 
-  [cell(edgeClass)()]
-    .concat(range(0, x-2).map(cell(innerClass)))
-    .concat([cell(edgeClass)()])
-  );
+const cell = (cls, x, y) => div({id: pid(x, y), className: 'cell ' + cls}, []);
+
+const toRow = (edgeClass, innerClass) => (width, rowIdx) => 
+  [cell(edgeClass, 0, width)]
+    .concat(times(inc, width-2).map(x => cell(innerClass, x, rowIdx)))
+    .concat([cell(edgeClass, width-1, rowIdx)]);
 
 const edgeRow = toRow('corner', 'edgeCell');
 const row = toRow('edgeCell', 'gridCell');
 
-export default function matrix(x, y) { 
-  return table({className: 'board'}, 
-    [edgeRow(x)]
-      .concat(range(0, y-2).map((_) => row(x)))
-      .concat([edgeRow(x)])
+export default function matrix(width, height) { 
+  return div({className: 'board'}, 
+    edgeRow(width, 0)
+      .concat(chain(_y => row(width, _y), times(inc, height-2)))
+      .concat(edgeRow(width, height-1))
     );
 }

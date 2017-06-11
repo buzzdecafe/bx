@@ -3,7 +3,10 @@
 }
 .board {
   background-color: rgba(32, 32, 32, 0.9);
-  border-collapse: collapse;
+  width: 32em;
+  display: grid;
+  grid-template-columns: repeat(10, auto);
+  grid-rows-columns: repeat(10, auto);
 }
 .cell {
   width: 3.2em;
