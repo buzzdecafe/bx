@@ -4,12 +4,6 @@ import Type from 'union-type';
 
 const toElem = id => document.querySelector('#' + id);
 
-const decoratePt = s => pt => toElem(pt.src).className += s;
-const hitPt = decoratePt(' hit');
-const refPt = decoratePt(' reflection');
-const exitPt = decoratePt(' selected');
-
-
 const E = Type({
   Result: {
     type: String, 
@@ -30,7 +24,7 @@ export const edge = result => {
   // Effect: update view
   result.points.forEach(pt => {
     const elem = toElem(pt.src);
-    elem.className = result.type;
+    elem.className += ' ' + result.type;
     elem.textContent = result.text;
   });
 };

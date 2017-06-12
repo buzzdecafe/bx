@@ -2,7 +2,7 @@ import chain from 'ramda/src/chain';
 import times from 'ramda/src/times';
 import {div} from 'rdom';
 
-const pid = (x, y) => 'pt-' + x + '-' + y;
+export const pid = (x, y) => 'pt-' + x + '-' + y;
 const inc = n => n + 1;
 
 const cell = (cls, x, y) => div({id: pid(x, y), className: 'cell ' + cls}, []);
