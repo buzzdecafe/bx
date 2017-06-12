@@ -8,7 +8,7 @@ const inc = n => n + 1;
 const cell = (cls, x, y) => div({id: pid(x, y), className: 'cell ' + cls}, []);
 
 const toRow = (edgeClass, innerClass) => (width, rowIdx) => 
-  [cell(edgeClass, 0, width)]
+  [cell(edgeClass, 0, rowIdx)]
     .concat(times(inc, width-2).map(x => cell(innerClass, x, rowIdx)))
     .concat([cell(edgeClass, width-1, rowIdx)]);
 

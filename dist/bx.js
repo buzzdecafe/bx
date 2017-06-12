@@ -1516,8 +1516,8 @@ const Ray = unionType$1({
 });
 
 const Solution = unionType$1({
-  Valid: [],
   Impossible: [],
+  Valid: [String],
   Invalid: [String]
 });
 
@@ -2452,7 +2452,7 @@ const inc$1 = n => n + 1;
 
 const cell = (cls, x, y) => rdom_1({ id: pid(x, y), className: 'cell ' + cls }, []);
 
-const toRow = (edgeClass, innerClass) => (width, rowIdx) => [cell(edgeClass, 0, width)].concat(times(inc$1, width - 2).map(x => cell(innerClass, x, rowIdx))).concat([cell(edgeClass, width - 1, rowIdx)]);
+const toRow = (edgeClass, innerClass) => (width, rowIdx) => [cell(edgeClass, 0, rowIdx)].concat(times(inc$1, width - 2).map(x => cell(innerClass, x, rowIdx))).concat([cell(edgeClass, width - 1, rowIdx)]);
 
 const edgeRow = toRow('corner', 'edgeCell');
 const row = toRow('edgeCell', 'gridCell');
@@ -2510,11 +2510,17 @@ const isEdge = n => pt => !isGrid(n)(pt) && !isCorner(n)(pt);
 
 const clicks = index$1.stream();
 
-const edge$1 = index$2(isEdge(10), index$1.map(e => {
-  debugger;return toEdgeCoords(e);
-}, index$2(isCell, clicks)));
+const es = index$1.stream(0);
+
+const edge$1 = index$2(isEdge(10), index$1.map(toEdgeCoords, index$2(isCell, clicks)));
+
+const edgeCounter = index$1.map(_ => es(es() + 1)(), edge$1);
 
 const grid = index$2(isGrid(10), index$1.map(toGridCoords, index$2(isCell, clicks)));
+
+const gs = index$1.stream(0);
+
+const gridCounter = index$1.map(_ => gs(gs() + 1)(), grid);
 
 const check = index$1.stream();
 
@@ -3149,29 +3155,54 @@ var whereEq = _curry2$6(function whereEq(spec, testObj) {
   return where(map(equals, spec), testObj);
 });
 
-const getElem = (board, attrs, pt) => {
-  const tr = board.querySelector('tr:nth-child(' + (pt.y + 1) + ')');
-  const td = tr.querySelector('td:nth-child(' + (pt.x + 1) + ')');
-  td.className += attrs.className;
-  pt.src.className += attrs.className;
-  if (attrs.textContent) {
-    td.textContent = attrs.textContent;
-    pt.src.textContent = attrs.textContent;
+const toElem = id$$1 => document.querySelector('#' + id$$1);
+
+const E = unionType$1({
+  Result: {
+    type: String,
+    text: String,
+    points: Array
   }
-  return td;
+});
+
+// edgeResult :: Ray -> Result
+const edgeResult = Ray.case({
+  Hit: pt => E.Result('hit', '', [pt]),
+  Reflection: pt => E.Result('reflection', '', [pt]),
+  Exit: (from, to) => E.Result('selected', from.id, [from, to])
+});
+
+// update.edge :: Result -> unit
+const edge$2 = result => {
+  // Effect: update view
+  result.points.forEach(pt => {
+    const elem = toElem(pt.src);
+    elem.className = result.type;
+    elem.textContent = result.text;
+  });
 };
 
-const show = board => ray => Ray.case({
-  Hit: from => getElem(board, { className: ' hit' }, from),
-  Reflection: from => getElem(board, { className: ' reflection' }, from),
-  Exit: (from, to) => getElem(board, { className: ' selected', textContent: from.id }, to)
-}, ray);
 
-const wm = new WeakMap();
 
-const inc = elem => {
+//-------------------------------
+// Count queries display
+//-------------------------------
+
+const queries = t => n => t.textContent = n;
+
+//-------------------------------
+// check solution button
+//-------------------------------
+
+const Guess = unionType$1({
+  Certain: [Point],
+  Possible: [Point],
+  None: []
+});
+
+const inc = src => {
   const cn = elem.className;
-  const state = (Number(wm.get(elem)) + 1) % 3;
+  const state = (Number(gridNotes[elem]) + 1) % 3;
   if (isNaN(state)) {
     wm.set(elem, 1);
     elem.className += ' guess1';
@@ -3194,37 +3225,29 @@ const guess = gs => pt => {
 
 const validate = (pts, gs) => gs.length === pts.length && all(pt => find(whereEq(pt), gs), pts);
 
-const tally = function () {
-  var count = 0;
-  return () => {
-    count += 1;
-    return count;
-  };
-}();
-
-const showTally = t => n => t.textContent = n;
-
-const trySolve = (points$$1, gstream) => e => gstream().length !== points$$1.length ? Solution.Impossible : validate(points$$1, gstream()) ? Solution.Valid : Solution.Invalid('Incorrect solution');
+const trySolve = (points$$1, gstream) => e => gstream().length !== points$$1.length ? Solution.Impossible : validate(points$$1, gstream()) ? Solution.Valid('You found the solution!') : Solution.Invalid('Incorrect solution');
 
 const notify = s => Solution.case({
-  Valid: () => alert('You found the solution!'),
-  Invalid: m => alert(m),
+  Valid: alert,
+  Invalid: alert,
   Impossible: () => {}
 }, s);
 
 const onReady = () => {
+  const mWidth = 10;
+  const mHeight = 10;
+  const m = 5;
+  const pts = points(mWidth, m);
+
   const board = document.getElementById('board');
-  board.appendChild(matrix(10, 10));
+  board.appendChild(matrix(mWidth, mHeight));
   board.addEventListener('click', clicks);
 
-  const m = 5;
-  const pts = points(10, m);
+  const edgeResults = index$1.map(o(edgeResult, queryOver(pts)), edge$1);
+  index$1.on(edge$2, edgeResults);
 
-  const result = o(show(board), queryOver(pts));
-  index$1.on(result, edge$1);
-
-  const queries = document.getElementById('queries');
-  index$1.on(o(showTally(queries), tally), edge$1);
+  const qs = document.getElementById('queries');
+  index$1.on(queries(qs), edgeCounter);
 
   const attempt = document.getElementById('attempt');
   attempt.addEventListener('click', check);

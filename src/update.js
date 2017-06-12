@@ -9,16 +9,29 @@ const hitPt = decoratePt(' hit');
 const refPt = decoratePt(' reflection');
 const exitPt = decoratePt(' selected');
 
-// update :: Ray -> unit
-export const edge = ray => {
-  Ray.case({
-    Hit       : hitPt,
-    Reflection: refPt,
-    Exit      : (from, to) => {
-      from.textContent = to.textContent = from.id;
-      decoratePt(from);
-      decoratePt(to);
-    }
+
+const E = Type({
+  Result: {
+    type: String, 
+    text: String, 
+    points: Array
+  }
+});
+
+// edgeResult :: Ray -> Result
+export const edgeResult = Ray.case({
+  Hit       : pt         => E.Result('hit', '', [pt]),
+  Reflection: pt         => E.Result('reflection', '', [pt]),
+  Exit      : (from, to) => E.Result('selected', from.id, [from, to])
+});
+
+// update.edge :: Result -> unit
+export const edge = result => {
+  // Effect: update view
+  result.points.forEach(pt => {
+    const elem = toElem(pt.src);
+    elem.className = result.type;
+    elem.textContent = result.text;
   });
 };
 
@@ -31,7 +44,7 @@ export const grid = pt => {
 // Count queries display
 //-------------------------------
 
-const queries = t => n => t.textContent = n;
+export const queries = t => n => t.textContent = n;
 
 
 //-------------------------------
@@ -52,9 +65,9 @@ const takeGuess = pt => {
     guesses[pt.src] = Possible(pt);
   } else {
     guesses[pt.src] = Guess.case({
-      None    : () => Possible(pt),
-      Possible: _  => Guess.Certain(pt),
-      Certain : _  => None
+      None    : _ => Possible(pt),
+      Possible: _ => Guess.Certain(pt),
+      Certain : _ => None
     }, guess);
   }
   return guesses[pt.src];

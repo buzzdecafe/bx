@@ -11,7 +11,7 @@ import reject from 'ramda/src/reject';
 import tap from 'ramda/src/tap';
 import whereEq from 'ramda/src/whereEq';
 import {Solution} from './types';
-import './update';
+import * as update from './update';
 
 
 
@@ -65,7 +65,8 @@ const onReady = () => {
   board.addEventListener('click', clicks);
 
 
-  flyd.on(update.edge, edge);
+  const edgeResults = flyd.map(o(update.edgeResult, queryOver(pts)), edge);
+  flyd.on(update.edge, edgeResults);
 
   const qs = document.getElementById('queries');
   flyd.on(update.queries(qs), edgeCounter);
