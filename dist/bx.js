@@ -1363,7 +1363,7 @@ var mapConstrToFn = function(group, constr) {
 
 var numToStr = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
 
-var validate$1 = function(group, validators, name, args) {
+var validate = function(group, validators, name, args) {
   var validator, v, i;
   if (args.length > validators.length) {
     throw new TypeError('too many arguments supplied to constructor ' + name
@@ -1407,7 +1407,7 @@ function constructor(group, name, fields) {
     val._keys = keys;
     val._name = name;
     if (Type.check === true) {
-      validate$1(group, validators, name, arguments);
+      validate(group, validators, name, arguments);
     }
     for (i = 0; i < arguments.length; ++i) {
       val[keys[i]] = arguments[i];
@@ -1512,12 +1512,6 @@ const Ray = unionType$1({
   Hit: [Point],
   Reflection: [Point],
   Exit: [Point, Point]
-});
-
-const Solution = unionType$1({
-  Impossible: [],
-  Valid: [String],
-  Invalid: [String]
 });
 
 var _has = function _has(prop, obj) {
@@ -2590,6 +2584,108 @@ var o = _curry3$3(function o(f, g, x) {
   return f(g(x));
 });
 
+var _filter = function _filter(fn, list) {
+  var idx = 0;
+  var len = list.length;
+  var result = [];
+
+  while (idx < len) {
+    if (fn(list[idx])) {
+      result[result.length] = list[idx];
+    }
+    idx += 1;
+  }
+  return result;
+};
+
+var _isObject = function _isObject(x) {
+  return Object.prototype.toString.call(x) === '[object Object]';
+};
+
+var _xfilter = (function() {
+  function XFilter(f, xf) {
+    this.xf = xf;
+    this.f = f;
+  }
+  XFilter.prototype['@@transducer/init'] = _xfBase.init;
+  XFilter.prototype['@@transducer/result'] = _xfBase.result;
+  XFilter.prototype['@@transducer/step'] = function(result, input) {
+    return this.f(input) ? this.xf['@@transducer/step'](result, input) : result;
+  };
+
+  return _curry2$6(function _xfilter(f, xf) { return new XFilter(f, xf); });
+}());
+
+/**
+ * Takes a predicate and a `Filterable`, and returns a new filterable of the
+ * same type containing the members of the given filterable which satisfy the
+ * given predicate. Filterable objects include plain objects or any object
+ * that has a filter method such as `Array`.
+ *
+ * Dispatches to the `filter` method of the second argument, if present.
+ *
+ * Acts as a transducer if a transformer is given in list position.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.1.0
+ * @category List
+ * @sig Filterable f => (a -> Boolean) -> f a -> f a
+ * @param {Function} pred
+ * @param {Array} filterable
+ * @return {Array} Filterable
+ * @see R.reject, R.transduce, R.addIndex
+ * @example
+ *
+ *      var isEven = n => n % 2 === 0;
+ *
+ *      R.filter(isEven, [1, 2, 3, 4]); //=> [2, 4]
+ *
+ *      R.filter(isEven, {a: 1, b: 2, c: 3, d: 4}); //=> {b: 2, d: 4}
+ */
+var filter$1 = _curry2$6(_dispatchable(['filter'], _xfilter, function(pred, filterable) {
+  return (
+    _isObject(filterable) ?
+      _reduce$3(function(acc, key) {
+        if (pred(filterable[key])) {
+          acc[key] = filterable[key];
+        }
+        return acc;
+      }, {}, keys(filterable)) :
+    // else
+      _filter(pred, filterable)
+  );
+}));
+
+/**
+ * Returns a list of all the enumerable own properties of the supplied object.
+ * Note that the order of the output array is not guaranteed across different
+ * JS platforms.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.1.0
+ * @category Object
+ * @sig {k: v} -> [v]
+ * @param {Object} obj The object to extract values from
+ * @return {Array} An array of the values of the object's own properties.
+ * @see R.valuesIn, R.keys
+ * @example
+ *
+ *      R.values({a: 1, b: 2, c: 3}); //=> [1, 2, 3]
+ */
+var values = _curry1$6(function values(obj) {
+  var props = keys(obj);
+  var len = props.length;
+  var vals = [];
+  var idx = 0;
+  while (idx < len) {
+    vals[idx] = obj[props[idx]];
+    idx += 1;
+  }
+  return vals;
+});
+
 var _pipe$3 = function _pipe(f, g) {
   return function() {
     return g.call(this, f.apply(this, arguments));
@@ -2822,6 +2918,119 @@ var all = _curry2$6(_dispatchable(['all'], _xall, function all(fn, list) {
   return true;
 }));
 
+/**
+ * Returns the nth element of the given list or string. If n is negative the
+ * element at index length + n is returned.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.1.0
+ * @category List
+ * @sig Number -> [a] -> a | Undefined
+ * @sig Number -> String -> String
+ * @param {Number} offset
+ * @param {*} list
+ * @return {*}
+ * @example
+ *
+ *      var list = ['foo', 'bar', 'baz', 'quux'];
+ *      R.nth(1, list); //=> 'bar'
+ *      R.nth(-1, list); //=> 'quux'
+ *      R.nth(-99, list); //=> undefined
+ *
+ *      R.nth(2, 'abc'); //=> 'c'
+ *      R.nth(3, 'abc'); //=> ''
+ * @symb R.nth(-1, [a, b, c]) = c
+ * @symb R.nth(0, [a, b, c]) = a
+ * @symb R.nth(1, [a, b, c]) = b
+ */
+var nth = _curry2$6(function nth(offset, list) {
+  var idx = offset < 0 ? list.length + offset : offset;
+  return _isString$3(list) ? list.charAt(idx) : list[idx];
+});
+
+/**
+ * Returns the first element of the given list or string. In some libraries
+ * this function is named `first`.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.1.0
+ * @category List
+ * @sig [a] -> a | Undefined
+ * @sig String -> String
+ * @param {Array|String} list
+ * @return {*}
+ * @see R.tail, R.init, R.last
+ * @example
+ *
+ *      R.head(['fi', 'fo', 'fum']); //=> 'fi'
+ *      R.head([]); //=> undefined
+ *
+ *      R.head('abc'); //=> 'a'
+ *      R.head(''); //=> ''
+ */
+var head = nth(0);
+
+var _xfind = (function() {
+  function XFind(f, xf) {
+    this.xf = xf;
+    this.f = f;
+    this.found = false;
+  }
+  XFind.prototype['@@transducer/init'] = _xfBase.init;
+  XFind.prototype['@@transducer/result'] = function(result) {
+    if (!this.found) {
+      result = this.xf['@@transducer/step'](result, void 0);
+    }
+    return this.xf['@@transducer/result'](result);
+  };
+  XFind.prototype['@@transducer/step'] = function(result, input) {
+    if (this.f(input)) {
+      this.found = true;
+      result = _reduced(this.xf['@@transducer/step'](result, input));
+    }
+    return result;
+  };
+
+  return _curry2$6(function _xfind(f, xf) { return new XFind(f, xf); });
+}());
+
+/**
+ * Returns the first element of the list which matches the predicate, or
+ * `undefined` if no element matches.
+ *
+ * Dispatches to the `find` method of the second argument, if present.
+ *
+ * Acts as a transducer if a transformer is given in list position.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.1.0
+ * @category List
+ * @sig (a -> Boolean) -> [a] -> a | undefined
+ * @param {Function} fn The predicate function used to determine if the element is the
+ *        desired one.
+ * @param {Array} list The array to consider.
+ * @return {Object} The element found, or `undefined`.
+ * @see R.transduce
+ * @example
+ *
+ *      var xs = [{a: 1}, {a: 2}, {a: 3}];
+ *      R.find(R.propEq('a', 2))(xs); //=> {a: 2}
+ *      R.find(R.propEq('a', 4))(xs); //=> undefined
+ */
+var find = _curry2$6(_dispatchable(['find'], _xfind, function find(fn, list) {
+  var idx = 0;
+  var len = list.length;
+  while (idx < len) {
+    if (fn(list[idx])) {
+      return list[idx];
+    }
+    idx += 1;
+  }
+}));
+
 var _arrayFromIterator = function _arrayFromIterator(iter) {
   var list = [];
   var next;
@@ -3037,195 +3246,6 @@ var equals = _curry2$6(function equals(a, b) {
   return _equals(a, b, [], []);
 });
 
-var _xfind = (function() {
-  function XFind(f, xf) {
-    this.xf = xf;
-    this.f = f;
-    this.found = false;
-  }
-  XFind.prototype['@@transducer/init'] = _xfBase.init;
-  XFind.prototype['@@transducer/result'] = function(result) {
-    if (!this.found) {
-      result = this.xf['@@transducer/step'](result, void 0);
-    }
-    return this.xf['@@transducer/result'](result);
-  };
-  XFind.prototype['@@transducer/step'] = function(result, input) {
-    if (this.f(input)) {
-      this.found = true;
-      result = _reduced(this.xf['@@transducer/step'](result, input));
-    }
-    return result;
-  };
-
-  return _curry2$6(function _xfind(f, xf) { return new XFind(f, xf); });
-}());
-
-/**
- * Returns the first element of the list which matches the predicate, or
- * `undefined` if no element matches.
- *
- * Dispatches to the `find` method of the second argument, if present.
- *
- * Acts as a transducer if a transformer is given in list position.
- *
- * @func
- * @memberOf R
- * @since v0.1.0
- * @category List
- * @sig (a -> Boolean) -> [a] -> a | undefined
- * @param {Function} fn The predicate function used to determine if the element is the
- *        desired one.
- * @param {Array} list The array to consider.
- * @return {Object} The element found, or `undefined`.
- * @see R.transduce
- * @example
- *
- *      var xs = [{a: 1}, {a: 2}, {a: 3}];
- *      R.find(R.propEq('a', 2))(xs); //=> {a: 2}
- *      R.find(R.propEq('a', 4))(xs); //=> undefined
- */
-var find = _curry2$6(_dispatchable(['find'], _xfind, function find(fn, list) {
-  var idx = 0;
-  var len = list.length;
-  while (idx < len) {
-    if (fn(list[idx])) {
-      return list[idx];
-    }
-    idx += 1;
-  }
-}));
-
-var _filter = function _filter(fn, list) {
-  var idx = 0;
-  var len = list.length;
-  var result = [];
-
-  while (idx < len) {
-    if (fn(list[idx])) {
-      result[result.length] = list[idx];
-    }
-    idx += 1;
-  }
-  return result;
-};
-
-var _isObject = function _isObject(x) {
-  return Object.prototype.toString.call(x) === '[object Object]';
-};
-
-var _xfilter = (function() {
-  function XFilter(f, xf) {
-    this.xf = xf;
-    this.f = f;
-  }
-  XFilter.prototype['@@transducer/init'] = _xfBase.init;
-  XFilter.prototype['@@transducer/result'] = _xfBase.result;
-  XFilter.prototype['@@transducer/step'] = function(result, input) {
-    return this.f(input) ? this.xf['@@transducer/step'](result, input) : result;
-  };
-
-  return _curry2$6(function _xfilter(f, xf) { return new XFilter(f, xf); });
-}());
-
-/**
- * Takes a predicate and a `Filterable`, and returns a new filterable of the
- * same type containing the members of the given filterable which satisfy the
- * given predicate. Filterable objects include plain objects or any object
- * that has a filter method such as `Array`.
- *
- * Dispatches to the `filter` method of the second argument, if present.
- *
- * Acts as a transducer if a transformer is given in list position.
- *
- * @func
- * @memberOf R
- * @since v0.1.0
- * @category List
- * @sig Filterable f => (a -> Boolean) -> f a -> f a
- * @param {Function} pred
- * @param {Array} filterable
- * @return {Array} Filterable
- * @see R.reject, R.transduce, R.addIndex
- * @example
- *
- *      var isEven = n => n % 2 === 0;
- *
- *      R.filter(isEven, [1, 2, 3, 4]); //=> [2, 4]
- *
- *      R.filter(isEven, {a: 1, b: 2, c: 3, d: 4}); //=> {b: 2, d: 4}
- */
-var filter$1 = _curry2$6(_dispatchable(['filter'], _xfilter, function(pred, filterable) {
-  return (
-    _isObject(filterable) ?
-      _reduce$3(function(acc, key) {
-        if (pred(filterable[key])) {
-          acc[key] = filterable[key];
-        }
-        return acc;
-      }, {}, keys(filterable)) :
-    // else
-      _filter(pred, filterable)
-  );
-}));
-
-var _complement = function _complement(f) {
-  return function() {
-    return !f.apply(this, arguments);
-  };
-};
-
-/**
- * The complement of [`filter`](#filter).
- *
- * Acts as a transducer if a transformer is given in list position. Filterable
- * objects include plain objects or any object that has a filter method such
- * as `Array`.
- *
- * @func
- * @memberOf R
- * @since v0.1.0
- * @category List
- * @sig Filterable f => (a -> Boolean) -> f a -> f a
- * @param {Function} pred
- * @param {Array} filterable
- * @return {Array}
- * @see R.filter, R.transduce, R.addIndex
- * @example
- *
- *      var isOdd = (n) => n % 2 === 1;
- *
- *      R.reject(isOdd, [1, 2, 3, 4]); //=> [2, 4]
- *
- *      R.reject(isOdd, {a: 1, b: 2, c: 3, d: 4}); //=> {b: 2, d: 4}
- */
-var reject = _curry2$6(function reject(pred, filterable) {
-  return filter$1(_complement(pred), filterable);
-});
-
-/**
- * Runs the given function with the supplied object, then returns the object.
- *
- * @func
- * @memberOf R
- * @since v0.1.0
- * @category Function
- * @sig (a -> *) -> a -> a
- * @param {Function} fn The function to call with `x`. The return value of `fn` will be thrown away.
- * @param {*} x
- * @return {*} `x`.
- * @example
- *
- *      var sayX = x => console.log('x is ' + x);
- *      R.tap(sayX, 100); //=> 100
- *      // logs 'x is 100'
- * @symb R.tap(f, a) = a
- */
-var tap = _curry2$6(function tap(fn, x) {
-  fn(x);
-  return x;
-});
-
 /**
  * Takes a spec object and a test object; returns true if the test satisfies
  * the spec. Each of the spec's own properties must be a predicate function.
@@ -3301,31 +3321,10 @@ var whereEq = _curry2$6(function whereEq(spec, testObj) {
   return where(map(equals, spec), testObj);
 });
 
-var _isNumber = function _isNumber(x) {
-  return Object.prototype.toString.call(x) === '[object Number]';
-};
-
-/**
- * Returns the number of elements in the array by returning `list.length`.
- *
- * @func
- * @memberOf R
- * @since v0.3.0
- * @category List
- * @sig [a] -> Number
- * @param {Array} list The array to inspect.
- * @return {Number} The length of the array.
- * @example
- *
- *      R.length([]); //=> 0
- *      R.length([1, 2, 3]); //=> 3
- */
-var length = _curry1$6(function length(list) {
-  return list != null && _isNumber(list.length) ? list.length : NaN;
-});
-
+// toElem :: String -> DOMElement
 const toElem = id => document.querySelector('#' + id);
 
+// of :: Object -> Point
 const of$1 = Point.PointOf;
 
 //-------------------------------
@@ -3340,6 +3339,7 @@ const E = unionType$1({
   }
 });
 
+// nextId :: unit -> Number
 const nextId = function () {
   var counter = 64;
   return () => {
@@ -3369,6 +3369,7 @@ const edge$2 = result => {
 // Count queries display
 //-------------------------------
 
+// queries :: DOMElement -> Number -> unit
 const queries = t => n => t.textContent = n;
 
 //-------------------------------
@@ -3387,8 +3388,8 @@ const Guess = unionType$1({
 
 const guesses = {};
 
-// certainCount :: Guess -> Number
-const certainCount = _ => pipe$3(filter$1(g => g._name === 'Certain'), keys, length)(guesses);
+// certains :: Guess -> [Certain] 
+const certains = _ => pipe$3(filter$1(g => g._name === 'Certain'), values)(guesses);
 
 // takeGuess :: Point -> Guess
 const takeGuess = pt => {
@@ -3405,26 +3406,43 @@ const takeGuess = pt => {
   return guesses[pt.src];
 };
 
+// renderGuess :: String -> Point -> unit
 const renderGuess = cls => pt => {
   const elem = toElem(pt.src);
   elem.className = elem.className.replace(/\bguess\d\b/g, '') + ' ' + cls;
 };
 
+// grid :: Guess -> unit
 const grid$1 = Guess.case({
   None: renderGuess(''),
   Possible: renderGuess('guess1'),
   Certain: renderGuess('guess2')
 });
 
-const validate = (pts, gs) => gs.length === pts.length && all(pt => find(whereEq(pt), gs), pts);
+//-------------------------------
+// Attempted solution response
+//-------------------------------
 
-const trySolve = (points$$1, gct) => e => gct() !== points$$1.length ? Solution.Impossible : validate(points$$1, gstream()) ? Solution.Valid('You found the solution!') : Solution.Invalid('Incorrect solution');
+const Solution = unionType$1({
+  Impossible: [],
+  Valid: [String],
+  Invalid: [String]
+});
 
-const notify = s => Solution.case({
+// validate :: [Point] -> [Guess] -> Boolean
+const validate$1 = (pts, gs) => {
+  debugger;return gs.length === pts.length && all(pt => find(whereEq(pt), map(head, gs)), pts);
+};
+
+// trySolve :: ([Point], [Guess] Stream) -> Any -> Solution                              
+const trySolve = (points, cs) => _ => cs().length !== points.length ? Solution.Impossible : validate$1(points, cs()) ? Solution.Valid('You found the solution!') : Solution.Invalid('Incorrect solution');
+
+// notify :: Solution -> unit                                  
+const notify = Solution.case({
   Valid: alert,
   Invalid: alert,
   Impossible: () => {}
-}, s);
+});
 
 const onReady = () => {
   const mWidth = 10;
@@ -3444,13 +3462,13 @@ const onReady = () => {
 
   const guess = index$1.map(takeGuess, grid);
   index$1.on(grid$1, guess);
-  const guessCount = index$1.map(certainCount, guess);
 
   const attempt = document.getElementById('attempt');
   attempt.addEventListener('click', check);
-  index$1.on(n => attempt.disabled = n !== m, guessCount);
+  const certains$$1 = index$1.map(certains, guess);
+  index$1.on(cs => attempt.disabled = cs.length !== m, certains$$1);
 
-  const solve = index$1.map(trySolve(pts, guessCount), check);
+  const solve = index$1.map(trySolve(pts, certains$$1), check);
   index$1.on(notify, solve);
 };
 
