@@ -17,7 +17,7 @@ export default {
     }),
     commonjs({ 
       namedExports: {
-        'node_modules/rdom/dist/rdom.js': ['table', 'tr', 'td']
+        'node_modules/rdom/dist/rdom.js': ['div']
       }
     }),
     babel({

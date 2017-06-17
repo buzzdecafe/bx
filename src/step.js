@@ -1,26 +1,27 @@
 import merge from 'ramda/src/merge';
+import {pid} from './matrix';
 
-export const right = (p) => ({
+export const right = p => ({
   left:   merge(p, {x: p.x + 1, y: p.y - 1}),
-  center: merge(p, {x: p.x + 1, y: p.y    }),
+  center: merge(p, {x: p.x + 1, y: p.y, src: pid(p.x + 1, p.y)}),
   right:  merge(p, {x: p.x + 1, y: p.y + 1})
 });
 
 export const left = (p) => ({
   left:   merge(p, {x: p.x - 1, y: p.y - 1}),
-  center: merge(p, {x: p.x - 1, y: p.y    }),
+  center: merge(p, {x: p.x - 1, y: p.y, src: pid(p.x - 1, p.y)}),
   right:  merge(p, {x: p.x - 1, y: p.y + 1})
 });
 
 export const down = (p) => ({
   left:   merge(p, {x: p.x - 1, y: p.y + 1}),
-  center: merge(p, {x: p.x,     y: p.y + 1}),
+  center: merge(p, {x: p.x,     y: p.y + 1, src: pid(p.x, p.y + 1)}),
   right:  merge(p, {x: p.x + 1, y: p.y + 1})
 });
 
 export const up = (p) => ({
   left:   merge(p, {x: p.x - 1, y: p.y - 1}),
-  center: merge(p, {x: p.x,     y: p.y - 1}),
+  center: merge(p, {x: p.x,     y: p.y - 1, src: pid(p.x, p.y - 1)}),
   right:  merge(p, {x: p.x + 1, y: p.y - 1})
 });
 
@@ -40,10 +41,10 @@ const error = s => () => { throw s; }
 
 // firstStep :: Point -> Dir 
 export const firstStep = pt => pt.x === 0 ? right   :
-                        pt.x === 9 ? left    :
-                        pt.y === 0 ? down    :
-                        pt.y === 9 ? up      :
-                        error("Invalid step");
+                               pt.x === 9 ? left    :
+                               pt.y === 0 ? down    :
+                               pt.y === 9 ? up      :
+                               error("Invalid step");
 
 // exit :: (Dir, Point) -> Bool
 export const exit = (dir, pt) => {

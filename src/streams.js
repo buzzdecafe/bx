@@ -1,33 +1,27 @@
 import flyd from 'flyd';
 import filter from 'flyd/module/filter';
-import o from 'ramda/src/o';
 
-const id = (function() {
-  var counter = 64;
-  return () => {
-    counter += 1;
-    return String.fromCharCode(counter);
-  };
-}());
+
+const getCoords = id => {
+  let [_, x, y] = id.split('-');
+  return {x: Number(x), y: Number(y)};
+};
 
 //--------------------------------
 // Stream Transformers and Filters
 //--------------------------------
 
-const toEdgeCoords = e => ({
-  x: e.target.cellIndex,
-  y: e.target.parentElement.rowIndex,
-  id: id(),
-  src: e.target
-});
+const toCoords = e => {
+  let coords = getCoords(e.target.id);
+  return {
+    x: coords.x,
+    y: coords.y,
+    src: e.target.id
+  };
+};
 
-const toGridCoords = e => ({
-  x: e.target.cellIndex,
-  y: e.target.parentElement.rowIndex,
-  src: e.target
-});
-
-const isTd = e => e.target.nodeName === 'TD';
+const cellRx = /\bcell\b/;
+const isCell = e => cellRx.test(e.target.className);
 
 const isGrid = n => pt =>  pt.x > 0   && pt.y > 0 && 
                            pt.x < n-1 && pt.y < n-1;
@@ -46,10 +40,17 @@ const isEdge = n => pt => !isGrid(n)(pt) &&! isCorner(n)(pt);
 
 export const clicks = flyd.stream();
 
-export const edge = filter(isEdge(10), flyd.map(toEdgeCoords, filter(isTd, clicks)));
+const es = flyd.stream(0);
 
-export const grid = filter(isGrid(10), flyd.map(toGridCoords, filter(isTd, clicks))); 
+export const edge = filter(isEdge(10), flyd.map(toCoords, filter(isCell, clicks)));
+
+export const edgeCounter = flyd.map(_ => es(es() + 1)(), edge);
+
+export const grid = filter(isGrid(10), flyd.map(toCoords, filter(isCell, clicks))); 
+
+const gs = flyd.stream(0);
+
+export const gridCounter = flyd.map(_ => gs(gs() + 1)(), grid);
 
 export const check = flyd.stream();
-
 
