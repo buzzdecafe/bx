@@ -1,6 +1,5 @@
 import flyd from 'flyd';
 import filter from 'flyd/module/filter';
-import {id} from './types';
 
 
 const getCoords = id => {
@@ -12,17 +11,7 @@ const getCoords = id => {
 // Stream Transformers and Filters
 //--------------------------------
 
-const toEdgeCoords = e => {
-  let coords = getCoords(e.target.id);
-  return {
-    x: coords.x,
-    y: coords.y,
-    id: id(),
-    src: e.target.id
-  };
-};
-
-const toGridCoords = e => {
+const toCoords = e => {
   let coords = getCoords(e.target.id);
   return {
     x: coords.x,
@@ -30,7 +19,6 @@ const toGridCoords = e => {
     src: e.target.id
   };
 };
-
 
 const cellRx = /\bcell\b/;
 const isCell = e => cellRx.test(e.target.className);
@@ -54,11 +42,11 @@ export const clicks = flyd.stream();
 
 const es = flyd.stream(0);
 
-export const edge = filter(isEdge(10), flyd.map(toEdgeCoords, filter(isCell, clicks)));
+export const edge = filter(isEdge(10), flyd.map(toCoords, filter(isCell, clicks)));
 
 export const edgeCounter = flyd.map(_ => es(es() + 1)(), edge);
 
-export const grid = filter(isGrid(10), flyd.map(toGridCoords, filter(isCell, clicks))); 
+export const grid = filter(isGrid(10), flyd.map(toCoords, filter(isCell, clicks))); 
 
 const gs = flyd.stream(0);
 

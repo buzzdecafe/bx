@@ -1,4 +1,4 @@
-import {Ray, Point, id} from './types';
+import {Ray, Point} from './types';
 import {firstStep, exit, edge} from './step';
 
 const of = Point.PointOf;

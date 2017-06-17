@@ -6,7 +6,6 @@ export const Point = Type({
   Point: {
     x: isCoord, 
     y: isCoord, 
-    id: String,
     src: String
   }
 });
@@ -22,12 +21,4 @@ export const Solution = Type({
   Valid     : [String],
   Invalid   : [String]
 });
-
-export const id = (function() {
-  var counter = 64;
-  return () => {
-    counter += 1;
-    return String.fromCharCode(counter);
-  };
-}());
 

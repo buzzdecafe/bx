@@ -4,9 +4,11 @@ import matrix from './matrix';
 import {clicks, edge, edgeCounter, grid, gridCounter, check} from './streams';
 import {points} from './points';
 import o from 'ramda/src/o';
+import pipe from 'ramda/src/pipe';
 import all from 'ramda/src/all';
 import equals from 'ramda/src/equals';
 import find from 'ramda/src/find';
+import filter from 'ramda/src/filter';
 import reject from 'ramda/src/reject';
 import tap from 'ramda/src/tap';
 import whereEq from 'ramda/src/whereEq';
@@ -15,37 +17,13 @@ import * as update from './update';
 
 
 
-const inc = src => {
-  const cn = elem.className;
-  const state = (Number(gridNotes[elem]) + 1) % 3;
-  if (isNaN(state)) {
-    wm.set(elem, 1);
-    elem.className += ' guess1';
-  } else {
-    elem.className = cn.replace(/(guess)(\d)/, 
-        (_, base, n) =>  base + state);
-    wm.set(elem, state);
-  }
-  return elem;
-};
-
-const guess = gs => pt => {
-  const elem = inc(pt.src);
-  if (elem.className.includes('guess2')) {
-    gs.push(pt);
-  } else {
-    gs = reject(equals(pt), gs);
-  }
-  return gs;
-};
-
 const validate = (pts, gs) => gs.length === pts.length && 
                               all(pt => find(whereEq(pt), gs), pts);
 
-const trySolve = (points, gstream) => e =>
-  gstream().length !== points.length ? Solution.Impossible :
-    validate(points, gstream())      ? Solution.Valid('You found the solution!') : 
-                                       Solution.Invalid('Incorrect solution');
+const trySolve = (points, gct) => e =>
+  gct() !== points.length       ? Solution.Impossible :
+  validate(points, gstream())   ? Solution.Valid('You found the solution!') : 
+                                  Solution.Invalid('Incorrect solution');
 
 const notify = s => Solution.case({
   Valid:     alert,
@@ -71,12 +49,15 @@ const onReady = () => {
   const qs = document.getElementById('queries');
   flyd.on(update.queries(qs), edgeCounter);
 
+  const guess = flyd.map(update.takeGuess, grid);
+  flyd.on(update.grid, guess);
+  const guessCount = flyd.map(update.certainCount, guess)
+
   const attempt = document.getElementById('attempt');
   attempt.addEventListener('click', check);
+  flyd.on(n => attempt.disabled = n !== m, guessCount);
 
-  const guesses = flyd.map(guess([]), grid);
-  flyd.on(tap(gs => attempt.disabled = gs.length !== m), guesses);
-  const solve = flyd.map(trySolve(pts, guesses), check);
+  const solve = flyd.map(trySolve(pts, guessCount), check);
   flyd.on(notify, solve);
 };
 

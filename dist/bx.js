@@ -1504,7 +1504,6 @@ const Point = unionType$1({
   Point: {
     x: isCoord,
     y: isCoord,
-    id: String,
     src: String
   }
 });
@@ -1520,14 +1519,6 @@ const Solution = unionType$1({
   Valid: [String],
   Invalid: [String]
 });
-
-const id = function () {
-  var counter = 64;
-  return () => {
-    counter += 1;
-    return String.fromCharCode(counter);
-  };
-}();
 
 var _has = function _has(prop, obj) {
   return Object.prototype.hasOwnProperty.call(obj, prop);
@@ -2356,17 +2347,17 @@ module.exports = rdom;
 var rdom_1 = rdom.div;
 
 const pid = (x, y) => 'pt-' + x + '-' + y;
-const inc$1 = n => n + 1;
+const inc = n => n + 1;
 
 const cell = (cls, x, y) => rdom_1({ id: pid(x, y), className: 'cell ' + cls }, []);
 
-const toRow = (edgeClass, innerClass) => (width, rowIdx) => [cell(edgeClass, 0, rowIdx)].concat(times(inc$1, width - 2).map(x => cell(innerClass, x, rowIdx))).concat([cell(edgeClass, width - 1, rowIdx)]);
+const toRow = (edgeClass, innerClass) => (width, rowIdx) => [cell(edgeClass, 0, rowIdx)].concat(times(inc, width - 2).map(x => cell(innerClass, x, rowIdx))).concat([cell(edgeClass, width - 1, rowIdx)]);
 
 const edgeRow = toRow('corner', 'edgeCell');
 const row = toRow('edgeCell', 'gridCell');
 
 function matrix(width, height) {
-  return rdom_1({ className: 'board' }, edgeRow(width, 0).concat(chain(_y => row(width, _y), times(inc$1, height - 2))).concat(edgeRow(width, height - 1)));
+  return rdom_1({ className: 'board' }, edgeRow(width, 0).concat(chain(_y => row(width, _y), times(inc, height - 2))).concat(edgeRow(width, height - 1)));
 }
 
 const right = p => ({
@@ -2467,8 +2458,8 @@ var index$2 = index$1.curryN(2, function(fn, s) {
   }, [s]);
 });
 
-const getCoords = id$$1 => {
-  let [_, x, y] = id$$1.split('-');
+const getCoords = id => {
+  let [_, x, y] = id.split('-');
   return { x: Number(x), y: Number(y) };
 };
 
@@ -2476,17 +2467,7 @@ const getCoords = id$$1 => {
 // Stream Transformers and Filters
 //--------------------------------
 
-const toEdgeCoords = e => {
-  let coords = getCoords(e.target.id);
-  return {
-    x: coords.x,
-    y: coords.y,
-    id: id(),
-    src: e.target.id
-  };
-};
-
-const toGridCoords = e => {
+const toCoords = e => {
   let coords = getCoords(e.target.id);
   return {
     x: coords.x,
@@ -2512,11 +2493,11 @@ const clicks = index$1.stream();
 
 const es = index$1.stream(0);
 
-const edge$1 = index$2(isEdge(10), index$1.map(toEdgeCoords, index$2(isCell, clicks)));
+const edge$1 = index$2(isEdge(10), index$1.map(toCoords, index$2(isCell, clicks)));
 
 const edgeCounter = index$1.map(_ => es(es() + 1)(), edge$1);
 
-const grid = index$2(isGrid(10), index$1.map(toGridCoords, index$2(isCell, clicks)));
+const grid = index$2(isGrid(10), index$1.map(toCoords, index$2(isCell, clicks)));
 
 const gs = index$1.stream(0);
 
@@ -2608,6 +2589,171 @@ var _curry3$3 = function _curry3(fn) {
 var o = _curry3$3(function o(f, g, x) {
   return f(g(x));
 });
+
+var _pipe$3 = function _pipe(f, g) {
+  return function() {
+    return g.call(this, f.apply(this, arguments));
+  };
+};
+
+/**
+ * Returns a single item by iterating through the list, successively calling
+ * the iterator function and passing it an accumulator value and the current
+ * value from the array, and then passing the result to the next call.
+ *
+ * The iterator function receives two values: *(acc, value)*. It may use
+ * [`R.reduced`](#reduced) to shortcut the iteration.
+ *
+ * The arguments' order of [`reduceRight`](#reduceRight)'s iterator function
+ * is *(value, acc)*.
+ *
+ * Note: `R.reduce` does not skip deleted or unassigned indices (sparse
+ * arrays), unlike the native `Array.prototype.reduce` method. For more details
+ * on this behavior, see:
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce#Description
+ *
+ * Dispatches to the `reduce` method of the third argument, if present. When
+ * doing so, it is up to the user to handle the [`R.reduced`](#reduced)
+ * shortcuting, as this is not implemented by `reduce`.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.1.0
+ * @category List
+ * @sig ((a, b) -> a) -> a -> [b] -> a
+ * @param {Function} fn The iterator function. Receives two values, the accumulator and the
+ *        current element from the array.
+ * @param {*} acc The accumulator value.
+ * @param {Array} list The list to iterate over.
+ * @return {*} The final, accumulated value.
+ * @see R.reduced, R.addIndex, R.reduceRight
+ * @example
+ *
+ *      R.reduce(R.subtract, 0, [1, 2, 3, 4]) // => ((((0 - 1) - 2) - 3) - 4) = -10
+ *                -               -10
+ *               / \              / \
+ *              -   4           -6   4
+ *             / \              / \
+ *            -   3   ==>     -3   3
+ *           / \              / \
+ *          -   2           -1   2
+ *         / \              / \
+ *        0   1            0   1
+ *
+ * @symb R.reduce(f, a, [b, c, d]) = f(f(f(a, b), c), d)
+ */
+var reduce$3 = _curry3$3(_reduce$3);
+
+/**
+ * This checks whether a function has a [methodname] function. If it isn't an
+ * array it will execute that function otherwise it will default to the ramda
+ * implementation.
+ *
+ * @private
+ * @param {Function} fn ramda implemtation
+ * @param {String} methodname property to check for a custom implementation
+ * @return {Object} Whatever the return value of the method is.
+ */
+var _checkForMethod$3 = function _checkForMethod(methodname, fn) {
+  return function() {
+    var length = arguments.length;
+    if (length === 0) {
+      return fn();
+    }
+    var obj = arguments[length - 1];
+    return (_isArray$3(obj) || typeof obj[methodname] !== 'function') ?
+      fn.apply(this, arguments) :
+      obj[methodname].apply(obj, Array.prototype.slice.call(arguments, 0, length - 1));
+  };
+};
+
+/**
+ * Returns the elements of the given list or string (or object with a `slice`
+ * method) from `fromIndex` (inclusive) to `toIndex` (exclusive).
+ *
+ * Dispatches to the `slice` method of the third argument, if present.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.1.4
+ * @category List
+ * @sig Number -> Number -> [a] -> [a]
+ * @sig Number -> Number -> String -> String
+ * @param {Number} fromIndex The start index (inclusive).
+ * @param {Number} toIndex The end index (exclusive).
+ * @param {*} list
+ * @return {*}
+ * @example
+ *
+ *      R.slice(1, 3, ['a', 'b', 'c', 'd']);        //=> ['b', 'c']
+ *      R.slice(1, Infinity, ['a', 'b', 'c', 'd']); //=> ['b', 'c', 'd']
+ *      R.slice(0, -1, ['a', 'b', 'c', 'd']);       //=> ['a', 'b', 'c']
+ *      R.slice(-3, -1, ['a', 'b', 'c', 'd']);      //=> ['b', 'c']
+ *      R.slice(0, 3, 'ramda');                     //=> 'ram'
+ */
+var slice$3 = _curry3$3(_checkForMethod$3('slice', function slice(fromIndex, toIndex, list) {
+  return Array.prototype.slice.call(list, fromIndex, toIndex);
+}));
+
+/**
+ * Returns all but the first element of the given list or string (or object
+ * with a `tail` method).
+ *
+ * Dispatches to the `slice` method of the first argument, if present.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.1.0
+ * @category List
+ * @sig [a] -> [a]
+ * @sig String -> String
+ * @param {*} list
+ * @return {*}
+ * @see R.head, R.init, R.last
+ * @example
+ *
+ *      R.tail([1, 2, 3]);  //=> [2, 3]
+ *      R.tail([1, 2]);     //=> [2]
+ *      R.tail([1]);        //=> []
+ *      R.tail([]);         //=> []
+ *
+ *      R.tail('abc');  //=> 'bc'
+ *      R.tail('ab');   //=> 'b'
+ *      R.tail('a');    //=> ''
+ *      R.tail('');     //=> ''
+ */
+var tail$3 = _curry1$6(_checkForMethod$3('tail', slice$3(1, Infinity)));
+
+/**
+ * Performs left-to-right function composition. The leftmost function may have
+ * any arity; the remaining functions must be unary.
+ *
+ * In some libraries this function is named `sequence`.
+ *
+ * **Note:** The result of pipe is not automatically curried.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.1.0
+ * @category Function
+ * @sig (((a, b, ..., n) -> o), (o -> p), ..., (x -> y), (y -> z)) -> ((a, b, ..., n) -> z)
+ * @param {...Function} functions
+ * @return {Function}
+ * @see R.compose
+ * @example
+ *
+ *      var f = R.pipe(Math.pow, R.negate, R.inc);
+ *
+ *      f(3, 4); // -(3^4) + 1
+ * @symb R.pipe(f, g, h)(a, b) = h(g(f(a, b)))
+ */
+var pipe$3 = function pipe() {
+  if (arguments.length === 0) {
+    throw new Error('pipe requires at least one argument');
+  }
+  return _arity$6(arguments[0].length,
+                reduce$3(_pipe$3, arguments[0], tail$3(arguments)));
+};
 
 var _reduced = function _reduced(x) {
   return x && x['@@transducer/reduced'] ? x :
@@ -2950,12 +3096,6 @@ var find = _curry2$6(_dispatchable(['find'], _xfind, function find(fn, list) {
   }
 }));
 
-var _complement = function _complement(f) {
-  return function() {
-    return !f.apply(this, arguments);
-  };
-};
-
 var _filter = function _filter(fn, list) {
   var idx = 0;
   var len = list.length;
@@ -3028,6 +3168,12 @@ var filter$1 = _curry2$6(_dispatchable(['filter'], _xfilter, function(pred, filt
       _filter(pred, filterable)
   );
 }));
+
+var _complement = function _complement(f) {
+  return function() {
+    return !f.apply(this, arguments);
+  };
+};
 
 /**
  * The complement of [`filter`](#filter).
@@ -3155,7 +3301,36 @@ var whereEq = _curry2$6(function whereEq(spec, testObj) {
   return where(map(equals, spec), testObj);
 });
 
-const toElem = id$$1 => document.querySelector('#' + id$$1);
+var _isNumber = function _isNumber(x) {
+  return Object.prototype.toString.call(x) === '[object Number]';
+};
+
+/**
+ * Returns the number of elements in the array by returning `list.length`.
+ *
+ * @func
+ * @memberOf R
+ * @since v0.3.0
+ * @category List
+ * @sig [a] -> Number
+ * @param {Array} list The array to inspect.
+ * @return {Number} The length of the array.
+ * @example
+ *
+ *      R.length([]); //=> 0
+ *      R.length([1, 2, 3]); //=> 3
+ */
+var length = _curry1$6(function length(list) {
+  return list != null && _isNumber(list.length) ? list.length : NaN;
+});
+
+const toElem = id => document.querySelector('#' + id);
+
+const of$1 = Point.PointOf;
+
+//-------------------------------
+// Query (edge) events
+//-------------------------------
 
 const E = unionType$1({
   Result: {
@@ -3165,11 +3340,19 @@ const E = unionType$1({
   }
 });
 
+const nextId = function () {
+  var counter = 64;
+  return () => {
+    counter += 1;
+    return String.fromCharCode(counter);
+  };
+}();
+
 // edgeResult :: Ray -> Result
 const edgeResult = Ray.case({
   Hit: pt => E.Result('hit', '', [pt]),
   Reflection: pt => E.Result('reflection', '', [pt]),
-  Exit: (from, to) => E.Result('selected', from.id, [from, to])
+  Exit: (from, to) => E.Result('selected', nextId(), [from, to])
 });
 
 // update.edge :: Result -> unit
@@ -3181,8 +3364,6 @@ const edge$2 = result => {
     elem.textContent = result.text;
   });
 };
-
-
 
 //-------------------------------
 // Count queries display
@@ -3197,35 +3378,47 @@ const queries = t => n => t.textContent = n;
 const Guess = unionType$1({
   Certain: [Point],
   Possible: [Point],
-  None: []
+  None: [Point]
 });
 
-const inc = src => {
-  const cn = elem.className;
-  const state = (Number(gridNotes[elem]) + 1) % 3;
-  if (isNaN(state)) {
-    wm.set(elem, 1);
-    elem.className += ' guess1';
+//-------------------------------
+// Grid events
+//-------------------------------
+
+const guesses = {};
+
+// certainCount :: Guess -> Number
+const certainCount = _ => pipe$3(filter$1(g => g._name === 'Certain'), keys, length)(guesses);
+
+// takeGuess :: Point -> Guess
+const takeGuess = pt => {
+  const guess = guesses[pt.src];
+  if (guess) {
+    guesses[pt.src] = Guess.case({
+      None: _ => Guess.Possible(of$1(pt)),
+      Possible: _ => Guess.Certain(of$1(pt)),
+      Certain: _ => Guess.None(of$1(pt))
+    }, guess);
   } else {
-    elem.className = cn.replace(/(guess)(\d)/, (_, base, n) => base + state);
-    wm.set(elem, state);
+    guesses[pt.src] = Guess.Possible(of$1(pt));
   }
-  return elem;
+  return guesses[pt.src];
 };
 
-const guess = gs => pt => {
-  const elem = inc(pt.src);
-  if (elem.className.includes('guess2')) {
-    gs.push(pt);
-  } else {
-    gs = reject(equals(pt), gs);
-  }
-  return gs;
+const renderGuess = cls => pt => {
+  const elem = toElem(pt.src);
+  elem.className = elem.className.replace(/\bguess\d\b/g, '') + ' ' + cls;
 };
+
+const grid$1 = Guess.case({
+  None: renderGuess(''),
+  Possible: renderGuess('guess1'),
+  Certain: renderGuess('guess2')
+});
 
 const validate = (pts, gs) => gs.length === pts.length && all(pt => find(whereEq(pt), gs), pts);
 
-const trySolve = (points$$1, gstream) => e => gstream().length !== points$$1.length ? Solution.Impossible : validate(points$$1, gstream()) ? Solution.Valid('You found the solution!') : Solution.Invalid('Incorrect solution');
+const trySolve = (points$$1, gct) => e => gct() !== points$$1.length ? Solution.Impossible : validate(points$$1, gstream()) ? Solution.Valid('You found the solution!') : Solution.Invalid('Incorrect solution');
 
 const notify = s => Solution.case({
   Valid: alert,
@@ -3249,12 +3442,15 @@ const onReady = () => {
   const qs = document.getElementById('queries');
   index$1.on(queries(qs), edgeCounter);
 
+  const guess = index$1.map(takeGuess, grid);
+  index$1.on(grid$1, guess);
+  const guessCount = index$1.map(certainCount, guess);
+
   const attempt = document.getElementById('attempt');
   attempt.addEventListener('click', check);
+  index$1.on(n => attempt.disabled = n !== m, guessCount);
 
-  const guesses = index$1.map(guess([]), grid);
-  index$1.on(tap(gs => attempt.disabled = gs.length !== m), guesses);
-  const solve = index$1.map(trySolve(pts, guesses), check);
+  const solve = index$1.map(trySolve(pts, guessCount), check);
   index$1.on(notify, solve);
 };
 
