@@ -1,13 +1,18 @@
-import {Ray, Point} from './types';
+import {Ray, Point} from './ray';
 import Type from 'union-type';
 import filter from 'ramda/src/filter';
-import keys from 'ramda/src/keys';
-import length from 'ramda/src/length';
+import values from 'ramda/src/values';
 import pipe from 'ramda/src/pipe';
+import all from 'ramda/src/all';
+import head from 'ramda/src/head';
+import map from 'ramda/src/map';
+import find from 'ramda/src/find';
+import whereEq from 'ramda/src/whereEq';
 
-
+// toElem :: String -> DOMElement
 const toElem = id => document.querySelector('#' + id);
 
+// of :: Object -> Point
 const of = Point.PointOf;
 
 //-------------------------------
@@ -22,6 +27,7 @@ const E = Type({
   }
 });
 
+// nextId :: unit -> Number
 const nextId = (function() {
   var counter = 64;
   return () => {
@@ -51,6 +57,7 @@ export const edge = result => {
 // Count queries display
 //-------------------------------
 
+// queries :: DOMElement -> Number -> unit
 export const queries = t => n => t.textContent = n;
 
 
@@ -71,11 +78,10 @@ const Guess = Type({
 
 const guesses = {};
 
-// certainCount :: Guess -> Number
-export const certainCount = _ => pipe(
+// certains :: Guess -> [Certain] 
+export const certains = _ => pipe(
   filter(g => g._name === 'Certain'),
-  keys,
-  length
+  values
 )(guesses);
 
 // takeGuess :: Point -> Guess
@@ -93,12 +99,13 @@ export const takeGuess = pt => {
   return guesses[pt.src];
 };
 
-
+// renderGuess :: String -> Point -> unit
 const renderGuess = cls => pt => {
   const elem = toElem(pt.src);
   elem.className = elem.className.replace(/\bguess\d\b/g, '') + ' ' + cls;
 };
 
+// grid :: Guess -> unit
 export const grid = Guess.case({
   None: renderGuess(''),
   Possible: renderGuess('guess1'),
@@ -106,3 +113,30 @@ export const grid = Guess.case({
 });
 
 
+//-------------------------------
+// Attempted solution response
+//-------------------------------
+
+const Solution = Type({
+  Impossible: [],
+  Valid     : [String],
+  Invalid   : [String]
+});
+
+// validate :: [Point] -> [Guess] -> Boolean
+const validate = (pts, gs) => { debugger; return gs.length === pts.length &&  
+                              all(pt => find(whereEq(pt), map(head, gs)), pts); }
+
+// trySolve :: ([Point], [Guess] Stream) -> Any -> Solution                              
+export const trySolve = (points, cs) => _ => 
+  cs().length !== points.length ? Solution.Impossible :
+  validate(points, cs())        ? Solution.Valid('You found the solution!') : 
+                                  Solution.Invalid('Incorrect solution');
+
+// notify :: Solution -> unit                                  
+export const notify = Solution.case({
+  Valid:     alert,
+  Invalid:   alert,
+  Impossible: () => {}
+});
+ 

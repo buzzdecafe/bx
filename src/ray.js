@@ -16,9 +16,3 @@ export const Ray = Type({
   Exit: [Point, Point]
 });
 
-export const Solution = Type({
-  Impossible: [],
-  Valid     : [String],
-  Invalid   : [String]
-});
-
