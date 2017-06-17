@@ -5,7 +5,13 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup -c",
+    "test": "ava",
     "watch": "rollup -c -w"
+  },
+  "ava": {
+    "files": ["test/*.js"],
+    "source": ["src/*.js"],
+    "babel": "inherit"
   },
   "repository": {
     "type": "git",
@@ -24,7 +30,9 @@
     "union-type": "^0.4.0"
   },
   "devDependencies": {
+    "ava": "^0.19.1",
     "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-env": "^1.5.2",
     "babel-preset-latest": "^6.24.1",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
