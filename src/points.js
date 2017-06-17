@@ -16,8 +16,7 @@ const randPt = size => _ => {
     return randPt(size)();
   }
   chosen[k(x, y)] = true;
-  console.log(k(x, y));
   return {x: x, y: y};
 }
 
-export const points = (size, marbles) => times(randPt(size), marbles);
+export default function points(size, marbles) { return  times(randPt(size), marbles); }

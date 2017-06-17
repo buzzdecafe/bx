@@ -5,12 +5,21 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup -c",
-    "test": "ava",
+    "test": "ava --verbose",
+    "test:watch": "ava --verbose --watch",
     "watch": "rollup -c -w"
   },
   "ava": {
-    "files": ["test/*.js"],
-    "source": ["src/*.js"],
+    "files": [
+      "test/*.js"
+    ],
+    "source": [
+      "src/*.js"
+    ],
+    "require": [
+      "./test/helpers/setup-browser-env.js",
+      "babel-register"
+    ],
     "babel": "inherit"
   },
   "repository": {
@@ -34,6 +43,7 @@
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.5.2",
     "babel-preset-latest": "^6.24.1",
+    "browser-env": "^2.0.31",
     "rollup": "^0.41.6",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-commonjs": "^8.0.2",
