@@ -2,19 +2,18 @@
 <html>
   <head>
     <title>BX</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="css/bx.css" rel="stylesheet" />
+    <link rel="stylesheet" media="all and (orientation:portrait)" href="css/portrait.css">
+    <link rel="stylesheet" media="all and (orientation:landscape)" href="css/landscape.css">
     <script src="dist/bx.js"></script>
   </head>
   <body>
-    <div id="main">
-      <h1>BX</h1>
-      <div id="board"></div>
-    
-      <div class="button-box">Queries: <span id="queries">0</span></div>
-
-      <div class="button-box">
-        <button id="attempt" disabled>Check solution</button>
-      </div>
+    <div id="board"></div>
+  
+    <div class="button-box">
+      <button id="attempt" disabled>Check solution</button>
+      <p>Queries: <span id="queries">0</span></p>
     </div>
   </body>
 </html>

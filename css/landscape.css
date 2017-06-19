@@ -1,0 +1,12 @@
+#board {
+  height: 100%;
+  display: inline-block;
+}
+.board {
+  height: 100%;
+  width: 100vh;
+  margin-top: 0;
+}
+.button-box {
+  display: inline-block;
+}
