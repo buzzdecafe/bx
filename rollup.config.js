@@ -17,7 +17,7 @@ export default {
     }),
     commonjs({ 
       namedExports: {
-        'node_modules/rdom/dist/rdom.js': ['div']
+        'node_modules/rdom/dist/rdom.js': ['button', 'div', 'p']
       }
     }),
     babel({

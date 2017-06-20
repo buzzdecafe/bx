@@ -1,5 +1,6 @@
 body {
   margin: 0;
+  font-family: sans;
 }
 header {
   display: flex;
@@ -7,13 +8,9 @@ header {
   align-content: stretch;  
 }
 header * {
-  font-size: 2.5rem;
+  font-size: 2rem;
   text-align: center;
   vertical-align: middle;
-  width: 33vw;
-}
-button {
-  font-size: 2.2rem;
 }
 @media all and (orientation: portrait) {
   .board {
@@ -35,13 +32,15 @@ button {
 }
 .cell {
   outline: 1px solid #555;
+  text-align: center;
+  font-weight: bold;
+  padding-top: 1rem;
 }
 .corner {
   background-color: #fff;
   outline: none;
 }
 .edgeCell {
-  font-family: Symbols1;
   outline: 1px solid #fff;
   background-color: #888;
 }
@@ -66,4 +65,30 @@ button {
   border: 1px solid rgba(0, 224, 0, 1);
   background-color: rgba(0, 224, 0, 1);
   border-radius: 50%;
+}
+
+.modal {
+  display: none;
+  position: absolute;
+  top: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 64, 0.7);
+}
+.over {
+  display: none;
+  position: absolute;
+  left: 2vw;
+  right: 2vw;
+  top: 8%;
+  padding: 1em;
+}
+.solutionMessage {
+  text-align: center;
+  background-color: #fff;
+  padding: 1em;
+  border-radius: 1em;
+}
+.over {
+  font-size: 2.2rem;
 }
