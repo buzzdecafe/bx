@@ -10,7 +10,7 @@ import find from 'ramda/src/find';
 import whereEq from 'ramda/src/whereEq';
 
 // toElem :: String -> DOMElement
-const toElem = id => document.querySelector('#' + id);
+const toElem = id => document.getElementById(id);
 
 // of :: Object -> Point
 const of = Point.PointOf;
@@ -102,14 +102,14 @@ export const takeGuess = pt => {
 // renderGuess :: String -> Point -> unit
 const renderGuess = cls => pt => {
   const elem = toElem(pt.src);
-  elem.className = elem.className.replace(/\bguess\d\b/g, '') + ' ' + cls;
+  elem.className = elem.className.replace(/\s*guess\d/g, '') + cls;
 };
 
 // grid :: Guess -> unit
 export const grid = Guess.case({
   None: renderGuess(''),
-  Possible: renderGuess('guess1'),
-  Certain: renderGuess('guess2')
+  Possible: renderGuess(' guess1'),
+  Certain: renderGuess(' guess2')
 });
 
 

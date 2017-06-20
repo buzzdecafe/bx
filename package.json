@@ -19,6 +19,7 @@
   "homepage": "https://github.com/buzzdecafe/bx#readme",
   "dependencies": {
     "flyd": "^0.2.4",
+    "http-server": "^0.10.0",
     "ramda": "^0.24.0",
     "rdom": "^0.6.0",
     "union-type": "^0.4.0"
