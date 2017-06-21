@@ -8,6 +8,7 @@ import head from 'ramda/src/head';
 import map from 'ramda/src/map';
 import find from 'ramda/src/find';
 import whereEq from 'ramda/src/whereEq';
+import {show} from './results';
 
 // toElem :: String -> DOMElement
 const toElem = id => document.getElementById(id);
@@ -124,8 +125,8 @@ const Solution = Type({
 });
 
 // validate :: [Point] -> [Guess] -> Boolean
-const validate = (pts, gs) => { debugger; return gs.length === pts.length &&  
-                              all(pt => find(whereEq(pt), map(head, gs)), pts); }
+const validate = (pts, gs) => gs.length === pts.length &&  
+                              all(pt => find(whereEq(pt), map(head, gs)), pts);
 
 // trySolve :: ([Point], [Guess] Stream) -> Any -> Solution                              
 export const trySolve = (points, cs) => _ => 
@@ -135,8 +136,7 @@ export const trySolve = (points, cs) => _ =>
 
 // notify :: Solution -> unit                                  
 export const notify = Solution.case({
-  Valid:     alert,
-  Invalid:   alert,
+  Valid:     show,
+  Invalid:   show,
   Impossible: () => {}
 });
- 

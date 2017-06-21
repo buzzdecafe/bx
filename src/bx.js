@@ -1,10 +1,11 @@
 import flyd from 'flyd';
 import {queryOver} from './query';
 import matrix from './matrix';
-import {clicks, edge, edgeCounter, grid, gridCounter, check} from './streams';
+import {clicks, edge, edgeCounter, grid, gridCounter, check, ok} from './streams';
 import {points} from './points';
 import o from 'ramda/src/o';
 import * as update from './update';
+import {hide} from './results';
 
 
 const onReady = () => {
@@ -34,6 +35,10 @@ const onReady = () => {
 
   const solve = flyd.map(update.trySolve(pts, certains), check);
   flyd.on(update.notify, solve);
+  
+  const _alert = document.getElementById('msgWrap');
+  _alert.addEventListener('click', ok);
+  flyd.on(hide, ok);
 };
 
 document.addEventListener('DOMContentLoaded', onReady);

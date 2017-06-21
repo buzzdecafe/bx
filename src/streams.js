@@ -22,6 +22,7 @@ const toCoords = e => {
 
 const cellRx = /\bcell\b/;
 const isCell = e => cellRx.test(e.target.className);
+const isOk = e => e.target.id === 'ok';
 
 const isGrid = n => pt =>  pt.x > 0   && pt.y > 0 && 
                            pt.x < n-1 && pt.y < n-1;
@@ -54,3 +55,4 @@ export const gridCounter = flyd.map(_ => gs(gs() + 1)(), grid);
 
 export const check = flyd.stream();
 
+export const ok = filter(isOk, flyd.stream());
