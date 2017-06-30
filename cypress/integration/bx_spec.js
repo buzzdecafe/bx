@@ -1,37 +1,11 @@
 describe('BX', function(){
 
   beforeEach(function(){
-    cy.visit('https://buzzdecafe.github.io/bx')
-    // **** Resetting State Before Each Test ****
-    //
-    // Visiting our app before each test
-    // removes any state build up from
-    // previous tests. Visiting acts as if
-    // we closed a tab and opened a fresh one
-    //
-    // By default Cypress also automatically
-    // clears the Local Storage and Cookies
-    // before each test.
+    cy.visit('https://buzzdecafe.github.io/bx/')
   })
 
   it('has the correct <title>', () => {
-
-    // https://on.cypress.io/api/visit
-
-    // **** Making Assertions ****
-    //
-    // Here we've made our first assertion using a 'cy.should()' command.
-    // An assertion is comprised of a chainer, subject, and optional value.
-    // Chainers are available from Chai, Chai-jQuery, and Chai-Sinon.
-    // https://on.cypress.io/guides/making-assertions
-    //
-    // https://on.cypress.io/api/should
-    // https://on.cypress.io/api/and
-
-    // https://on.cypress.io/api/title
     cy.title().should('equal', 'BX')
-    //   ↲               ↲            ↲
-    // subject        chainer      value
   })
 
   it('has a game board', () => {
@@ -62,12 +36,60 @@ describe('BX', function(){
       cy.get('.board').children('.corner').should(cs => cs.length === 4);
     });
 
-    describe('Edge cell events', () => {
-      
+    describe('Edge cell clicks', () => {
+      it('is a Hit, Reflection, or Exit', () => {
+        cy.get('.edgeCell').each($pt => {
+          debugger;
+          var typeCt = 0;
+          const wrapped = cy.wrap($pt)
+          wrapped.click();
+          
+          wrapped.should(w => {
+            if (w.hasClass('hit')) {
+              typeCt += 1;
+            }
+            if (w.hasClass('reflection')) {
+              typeCt += 1;
+            }
+            if (w.hasClass('selected')) {
+              typeCt += 1;
+            }
+            expect(typeCt).to.eq(1); 
+          })
+        }); 
+      });
     });
 
     describe('Grid cell events', () => {
+      it('adds `guess1` to cell class after one click', () => {
+        cy.get('.gridCell').each($pt => {
+          cy.wrap($pt).should('not.have.class', 'guess1');
+          cy.wrap($pt).should('not.have.class', 'guess2');
 
+          cy.wrap($pt).click();
+          cy.wrap($pt).should('have.class', 'guess1');
+          cy.wrap($pt).should('not.have.class', 'guess2');
+        });
+      });
+
+      it('adds `guess2` to cell class after a second click', () => {
+        cy.get('.gridCell').each($pt => {
+          cy.wrap($pt).click();
+          cy.wrap($pt).click();
+          cy.wrap($pt).should('not.have.class', 'guess1');
+          cy.wrap($pt).should('have.class', 'guess2');
+        });
+      });
+
+      it('removes `guess*` class after a third click', () => {
+        cy.get('.gridCell').each($pt => {
+          cy.wrap($pt).click();
+          cy.wrap($pt).click();
+          cy.wrap($pt).click();
+          cy.wrap($pt).should('not.have.class', 'guess1');
+          cy.wrap($pt).should('not.have.class', 'guess2');
+        });
+      });
     });
   
   });
