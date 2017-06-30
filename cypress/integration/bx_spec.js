@@ -39,12 +39,11 @@ describe('BX', function(){
     describe('Edge cell clicks', () => {
       it('is a Hit, Reflection, or Exit', () => {
         cy.get('.edgeCell').each($pt => {
-          debugger;
-          var typeCt = 0;
           const wrapped = cy.wrap($pt)
           wrapped.click();
           
           wrapped.should(w => {
+            var typeCt = 0;
             if (w.hasClass('hit')) {
               typeCt += 1;
             }
