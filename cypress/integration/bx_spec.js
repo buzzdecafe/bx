@@ -63,31 +63,34 @@ describe('BX', function(){
     describe('Grid cell events', () => {
       it('adds `guess1` to cell class after one click', () => {
         cy.get('.gridCell').each($pt => {
-          cy.wrap($pt).should('not.have.class', 'guess1');
-          cy.wrap($pt).should('not.have.class', 'guess2');
+          const wrapped = cy.wrap($pt);
+          wrapped.should('not.have.class', 'guess1');
+          wrapped.should('not.have.class', 'guess2');
 
-          cy.wrap($pt).click();
-          cy.wrap($pt).should('have.class', 'guess1');
-          cy.wrap($pt).should('not.have.class', 'guess2');
+          wrapped.click();
+          wrapped.should('have.class', 'guess1');
+          wrapped.should('not.have.class', 'guess2');
         });
       });
 
       it('adds `guess2` to cell class after a second click', () => {
         cy.get('.gridCell').each($pt => {
-          cy.wrap($pt).click();
-          cy.wrap($pt).click();
-          cy.wrap($pt).should('not.have.class', 'guess1');
-          cy.wrap($pt).should('have.class', 'guess2');
+          const wrapped = cy.wrap($pt);
+          wrapped.click();
+          wrapped.click();
+          wrapped.should('not.have.class', 'guess1');
+          wrapped.should('have.class', 'guess2');
         });
       });
 
       it('removes `guess*` class after a third click', () => {
         cy.get('.gridCell').each($pt => {
-          cy.wrap($pt).click();
-          cy.wrap($pt).click();
-          cy.wrap($pt).click();
-          cy.wrap($pt).should('not.have.class', 'guess1');
-          cy.wrap($pt).should('not.have.class', 'guess2');
+          const wrapped = cy.wrap($pt);
+          wrapped.click();
+          wrapped.click();
+          wrapped.click();
+          wrapped.should('not.have.class', 'guess1');
+          wrapped.should('not.have.class', 'guess2');
         });
       });
     });
